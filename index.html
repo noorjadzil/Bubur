@@ -1,369 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Input 3 - Kasir Cepat</title>
+<title>Bubur Ayam Bandung Akang Hamzah</title>
 <link rel="stylesheet" href="style.css">
-
-<style>
-.tab-wrap{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:7px;
-margin-bottom:10px;
-}
-
-.tab-wrap button{
-width:100%;
-min-width:0;
-white-space:normal;
-font-size:12px;
-padding:9px 4px;
-line-height:1.15;
-text-align:center;
-border-radius:14px;
-}
-
-.kasir-card{
-padding:10px;
-}
-
-.menu-grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:8px;
-}
-
-.menu-btn{
-text-align:left;
-padding:9px !important;
-border-radius:15px;
-min-height:86px;
-display:flex;
-flex-direction:column;
-justify-content:space-between;
-}
-
-.menu-btn b{
-font-size:13px;
-line-height:1.15;
-display:block;
-}
-
-.menu-btn .muted{
-font-size:11px;
-}
-
-.qty-line{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:6px;
-margin-top:6px;
-}
-
-.qty-badge{
-font-size:12px;
-padding:4px 7px;
-border-radius:999px;
-background:#eef2ff;
-font-weight:800;
-}
-
-.mini-actions{
-display:grid;
-grid-template-columns:1fr 1fr 1fr;
-gap:8px;
-}
-
-.mini-actions button{
-font-size:13px;
-padding:10px 6px;
-}
-
-.stok-grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:8px;
-}
-
-.stok-grid label{
-font-size:12px;
-}
-
-.stok-grid input{
-padding:9px;
-font-size:13px;
-}
-
-.compact-title{
-display:flex;
-align-items:center;
-justify-content:space-between;
-gap:8px;
-margin-bottom:8px;
-}
-
-.compact-title h2{
-margin:0;
-font-size:17px;
-}
-
-@media(max-width:360px){
-.menu-grid{
-grid-template-columns:repeat(2,1fr);
-}
-.menu-btn{
-min-height:78px;
-padding:8px !important;
-}
-.menu-btn b{
-font-size:12px;
-}
-.tab-wrap button{
-font-size:11px;
-padding:8px 3px;
-}
-}
-</style>
 </head>
-
 <body>
-
-<header class="hero">
-<h1>Input 3 — Kasir Cepat</h1>
-<p>Konsep tombol besar. Cocok saat antrean ramai.</p>
-</header>
-
 <main class="wrap">
-
-<div class="card kasir-card">
-  <div class="row">
-    <input type="date" id="tanggal">
-    <input id="catatan" placeholder="Catatan singkat">
-  </div>
-
-  <div class="section-title">
-    <span class="pill">Mode cepat</span>
-    <div class="total" id="total">Rp 0</div>
-  </div>
-</div>
-
-<div id="area"></div>
-
-<div class="card kasir-card">
-  <div class="mini-actions">
-    <button class="green" onclick="simpanLaporan()">Simpan</button>
-    <button class="soft" onclick="kirim()">WA</button>
-    <button class="ghost" onclick="resetQty()">Reset</button>
-  </div>
-</div>
-
-</main>
-
-<div id="nav"></div>
-
-<script src="db.js"></script>
-
-<script>
-let S;
-let currentTab = 'produk';
-
-let qty = {
-  produk: [],
-  extra: [],
-  minuman: []
-};
-
-let stokValue = [];
-
-window.onload = async () => {
-  S = await getSettings();
-
-  tanggal.value = today();
-
-  document.getElementById('nav').innerHTML =
-    nav('input')
-    .replaceAll('Input2','Input3')
-    .replaceAll('laporan2','laporan3')
-    .replaceAll('setting2','setting3');
-
-  initQty();
-  render();
-};
-
-function initQty(){
-  ['produk','extra','minuman'].forEach(k=>{
-    qty[k] = activeItems(S,k).map(()=>0);
-  });
-
-  stokValue = (S.stok || []).map(()=>0);
-}
-
-function saveStokTemp(){
-  (S.stok || []).forEach((n,i)=>{
-    const el = document.getElementById(`stok_${i}`);
-    if(el) stokValue[i] = Number(el.value || 0);
-  });
-}
-
-function render(){
-
-  saveStokTemp();
-
-  const tabs = [
-    {id:'produk', nama:'Bubur'},
-    {id:'extra', nama:'Extra'},
-    {id:'minuman', nama:'Minum'},
-    {id:'stok', nama:'Stok'}
-  ];
-
-  const activeName = tabs.find(t=>t.id===currentTab)?.nama || 'Menu';
-
-  area.innerHTML = `
-
-    <div class="tab-wrap">
-      ${tabs.map(t=>`
-        <button 
-          class="${currentTab===t.id?'green':'ghost'}"
-          onclick="gantiTab('${t.id}')">
-          ${t.nama}
-        </button>
-      `).join('')}
+  <section class="hero home-hero">
+    <div>
+      <p class="eyebrow">Paket Konsep</p>
+      <h1>Bubur Ayam Bandung Akang Hamzah</h1>
+      <p>Pilih konsep input, laporan, dan setting. Semua file memakai IndexedDB yang sama, jadi data tetap nyambung.</p>
     </div>
+  </section>
 
-    <div class="card kasir-card">
-
-      <div class="compact-title">
-        <h2>${activeName}</h2>
-        <span class="pill">${currentTab === 'stok' ? 'Sisa barang' : 'Tap tambah qty'}</span>
+  <section class="home-grid">
+    <article class="home-card">
+      <span class="tag">Konsep 2</span>
+      <h2>Dashboard Stepper</h2>
+      <p>Input bertahap, nyaman untuk HP dan operator baru.</p>
+      <div class="home-links">
+        <a href="Input2.html">Input</a>
+        <a href="laporan2.html">Laporan</a>
+        <a href="setting2.html">Setting</a>
       </div>
+    </article>
 
-      ${
-        currentTab === 'stok'
-        ? `
-          <div class="stok-grid">
-            ${(S.stok||[]).map((n,i)=>`
-              <label>
-                ${n}
-                <input 
-                  id="stok_${i}" 
-                  type="number" 
-                  placeholder="Sisa"
-                  value="${stokValue[i] || ''}"
-                  oninput="stokValue[${i}]=Number(this.value||0)">
-              </label>
-            `).join('')}
-          </div>
-        `
-        : `
-          <div class="menu-grid">
-            ${activeItems(S,currentTab).map((x,i)=>`
-              <button 
-                class="ghost menu-btn"
-                onclick="add('${currentTab}',${i})">
+    <article class="home-card">
+      <span class="tag">Konsep 3</span>
+      <h2>Kasir Cepat</h2>
+      <p>Tombol menu ringkas, cocok untuk transaksi ramai.</p>
+      <div class="home-links">
+        <a href="Input3.html">Input</a>
+        <a href="laporan3.html">Laporan</a>
+        <a href="setting3.html">Setting</a>
+      </div>
+    </article>
 
-                <div>
-                  <b>${x.nama}</b>
-                  <span class="muted">${rupiah(x.harga)}</span>
-                </div>
+    <article class="home-card">
+      <span class="tag">Konsep 4</span>
+      <h2>Spreadsheet</h2>
+      <p>Model tabel padat untuk banyak item sekaligus.</p>
+      <div class="home-links">
+        <a href="Input4.html">Input</a>
+        <a href="laporan4.html">Laporan</a>
+        <a href="setting4.html">Setting</a>
+      </div>
+    </article>
 
-                <div class="qty-line">
-                  <span class="qty-badge">
-                    Qty: <span id="q_${currentTab}_${i}">${qty[currentTab][i] || 0}</span>
-                  </span>
-                  <span class="pill">+</span>
-                </div>
-
-              </button>
-            `).join('')}
-          </div>
-        `
-      }
-
-    </div>
-  `;
-
-  hitung();
-}
-
-function gantiTab(x){
-  saveStokTemp();
-  currentTab = x;
-  render();
-}
-
-function add(k,i){
-  qty[k][i] = Number(qty[k][i] || 0) + 1;
-
-  const el = document.getElementById(`q_${k}_${i}`);
-  if(el) el.textContent = qty[k][i];
-
-  hitung();
-}
-
-function resetQty(){
-  ['produk','extra','minuman'].forEach(k=>{
-    qty[k] = qty[k].map(()=>0);
-  });
-
-  render();
-  hitung();
-}
-
-function kumpul(){
-
-  saveStokTemp();
-
-  let data = {
-    tanggal: tanggal.value,
-    catatan: catatan.value,
-    konsep: 'Input3'
-  };
-
-  ['produk','extra','minuman'].forEach(k=>{
-    data[k] = activeItems(S,k).map((x,i)=>({
-      ...x,
-      jumlah: Number(qty[k][i] || 0)
-    }));
-  });
-
-  data.stok = (S.stok||[]).map((n,i)=>({
-    nama: n,
-    sisa: Number(stokValue[i] || 0)
-  }));
-
-  data.cekBarang = [];
-
-  return calcReport(data);
-}
-
-function hitung(){
-  total.innerText = rupiah(kumpul().total);
-}
-
-async function simpanLaporan(){
-
-  await saveReport(kumpul());
-
-  ['produk','extra','minuman'].forEach(k=>{
-    qty[k] = qty[k].map(()=>0);
-  });
-
-  stokValue = stokValue.map(()=>0);
-
-  catatan.value = '';
-
-  render();
-
-  alert('Tersimpan');
-}
-
-function kirim(){
-  openWA(kumpul(),S);
-}
-</script>
-
+    <article class="home-card">
+      <span class="tag">Konsep 5</span>
+      <h2>Premium Wizard</h2>
+      <p>Tampilan modern, ringkasan real-time, terasa seperti aplikasi.</p>
+      <div class="home-links">
+        <a href="Input5.html">Input</a>
+        <a href="laporan5.html">Laporan</a>
+        <a href="setting5.html">Setting</a>
+      </div>
+    </article>
+  </section>
+</main>
 </body>
 </html>
