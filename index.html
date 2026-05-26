@@ -30,15 +30,21 @@
   <div id="area"></div>
 
   <div class="card kasir-card">
-    <div class="mini-actions">
-      <button class="green" onclick="simpanDanKirimWA()">
-        Simpan + Kirim WA
-      </button>
+<div class="mini-actions">
 
-      <button class="ghost" onclick="resetQty()">
-        Reset
-      </button>
-    </div>
+  <button class="green" onclick="simpanDanKirimWA()">
+    Simpan + Kirim WA
+  </button>
+
+  <button class="blue" onclick="simpanSaja()">
+    Simpan Saja
+  </button>
+
+  <button class="ghost" onclick="resetQty()">
+    Reset
+  </button>
+
+</div>
   </div>
 
 </main>
@@ -320,6 +326,27 @@ async function simpanDanKirimWA(){
   render();
 
   alert('Data tersimpan');
+}
+
+  async function simpanSaja(){
+
+  const data = kumpul();
+
+  await saveReport(data);
+
+  ['produk','extra','minuman'].forEach(k=>{
+
+    qty[k] = qty[k].map(()=>0);
+
+  });
+
+  stokValue = stokValue.map(()=>0);
+
+  catatan.value = '';
+
+  render();
+
+  alert('Data berhasil disimpan');
 }
 
 </script>
