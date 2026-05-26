@@ -2,120 +2,107 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Bubur Kasir Cepat</title>
-<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Bubur Ayam Bandung Akang Hamzah</title>
+<style>
+:root{
+  --navy:#0f172a;--blue:#1e3a8a;--sky:#2563eb;--bg:#f4f7fb;--card:#ffffff;
+  --muted:#64748b;--line:#dbe3ef;--green:#16a34a;--red:#dc2626;--amber:#d97706;
+  --soft:#eef2ff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--navy);padding-bottom:86px}
+.hero{background:linear-gradient(135deg,#0f172a,#1e3a8a 60%,#2563eb);color:white;padding:18px 14px 16px;border-radius:0 0 24px 24px;box-shadow:0 10px 28px rgba(15,23,42,.22)}
+.hero h1{margin:0;font-size:21px;line-height:1.15}.hero p{margin:6px 0 0;font-size:13px;opacity:.9}
+.wrap{max-width:520px;margin:auto;padding:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px;box-shadow:0 8px 24px rgba(15,23,42,.08);margin-bottom:12px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 10px;font-size:14px;background:#fff;color:var(--navy);outline:none}textarea{min-height:80px;resize:vertical}
+button{border:0;border-radius:15px;padding:11px 10px;font-weight:800;font-size:14px;cursor:pointer;color:var(--navy);background:#e2e8f0}.green{background:var(--green);color:white}.blue{background:var(--sky);color:white}.red{background:var(--red);color:white}.ghost{background:#f8fafc;border:1px solid var(--line)}.soft{background:var(--soft);color:#1e3a8a}.amber{background:#fef3c7;color:#92400e}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px;position:sticky;top:6px;z-index:10}.tabs button{font-size:12px;padding:10px 4px;border-radius:999px}.tabs button.active{background:var(--blue);color:white}
+.title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.title h2{font-size:17px;margin:0}.pill{font-size:11px;padding:5px 9px;border-radius:999px;background:#eef2ff;color:#1e3a8a;font-weight:800;white-space:nowrap}.total{font-size:20px;font-weight:900;color:#16a34a;text-align:right}
+.menu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.menu-btn{text-align:left;min-height:86px;padding:9px!important;display:flex;flex-direction:column;justify-content:space-between}.menu-btn b{font-size:13px;line-height:1.15}.muted{font-size:12px;color:var(--muted)}.qty-line{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}.qty-badge{font-size:12px;padding:4px 8px;border-radius:999px;background:#eef2ff;font-weight:900}.qty-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}.qty-actions button{padding:8px 4px;font-size:12px}
+.actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.wide-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mini{font-size:12px;padding:8px}.list{display:grid;gap:8px}.item-row{display:grid;grid-template-columns:1fr 78px 44px;gap:7px;align-items:center}.report-card{border:1px solid var(--line);border-radius:16px;padding:10px;background:#fff}.report-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.report-head b{font-size:14px}.table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}.table th,.table td{border-bottom:1px solid #edf2f7;padding:7px 4px;text-align:left}.table th{text-transform:uppercase;font-size:10px;color:var(--muted)}.right{text-align:right!important}.hide{display:none!important}
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;background:white;border-top:1px solid var(--line);box-shadow:0 -10px 24px rgba(15,23,42,.09);padding:8px 10px;z-index:20}.bottom-nav-inner{max-width:520px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.bottom-nav button{font-size:12px;padding:9px 4px}.bottom-nav button.active{background:var(--blue);color:white}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sum-box{background:#f8fafc;border:1px solid var(--line);border-radius:16px;padding:10px}.sum-box small{display:block;color:var(--muted);font-weight:700}.sum-box b{font-size:16px}.empty{text-align:center;color:var(--muted);padding:28px 10px}.danger-zone{border-color:#fecaca;background:#fff7f7}
+@media(max-width:360px){.wrap{padding:9px}.hero h1{font-size:18px}.menu-btn{min-height:78px}.menu-btn b{font-size:12px}.tabs button,.bottom-nav button{font-size:11px}.row,.row3{gap:6px}.actions{gap:6px}.card{padding:10px}}
+</style>
 </head>
 <body>
 <header class="hero">
-<h1>Bubur Ayam Bandung Akang Hamzah</h1>
-<p>Input cepat per transaksi. Langsung simpan waktu lengkap.</p>
+  <h1>Bubur Ayam Bandung Akang Hamzah</h1>
+  <p>Sistem kasir cepat, laporan transaksi, harian, bulanan, dan setting menu.</p>
 </header>
-
 <main class="wrap">
-<div class="card kasir-card">
-  <div class="row">
-    <input type="date" id="tanggal">
-    <input id="catatan" placeholder="Catatan singkat">
-  </div>
-  <div class="section-title">
-    <span class="pill">Mode kasir cepat</span>
-    <div class="total" id="total">Rp 0</div>
-  </div>
-</div>
-
-<div id="area"></div>
-
-<div class="card kasir-card">
-  <div class="mini-actions">
-    <button class="green" onclick="simpanLaporan()">Simpan</button>
-    <button class="soft" onclick="kirim()">WA</button>
-    <button class="ghost" onclick="resetQty()">Reset</button>
-  </div>
-</div>
+  <section id="pageInput"></section>
+  <section id="pageLaporan" class="hide"></section>
+  <section id="pageSetting" class="hide"></section>
+  <section id="pageData" class="hide"></section>
 </main>
-
-<div id="nav"></div>
-<script src="db.js"></script>
+<nav class="bottom-nav"><div class="bottom-nav-inner">
+  <button id="navInput" class="active" onclick="showPage('input')">Input</button>
+  <button id="navLaporan" onclick="showPage('laporan')">Laporan</button>
+  <button id="navSetting" onclick="showPage('setting')">Setting</button>
+  <button id="navData" onclick="showPage('data')">Data</button>
+</div></nav>
 <script>
-let S;
-let currentTab='produk';
-let qty={produk:[],extra:[],minuman:[]};
-let stokValue=[];
-
-window.onload=async()=>{
- S=await getSettings();
- tanggal.value=today();
- document.querySelector('.hero h1').textContent=S.namaUsaha||'Bubur Kasir Cepat';
- document.getElementById('nav').innerHTML=nav('input');
- initQty();
- render();
+const DB_NAME='bubur_akang_hamzah_db_v1'; const STORE='laporan';
+const defaultSettings={
+  wa:'6280000000000',
+  produk:[
+    {nama:'Bubur Ori',harga:8000,aktif:true},{nama:'Bubur Cakwe',harga:9000,aktif:true},{nama:'Bubur Telur',harga:11000,aktif:true},{nama:'Bubur Komplit',harga:13000,aktif:true}
+  ],
+  extra:[
+    {nama:'Extra Ayam',harga:4000,aktif:true},{nama:'Extra Cakwe',harga:2000,aktif:true},{nama:'Extra Telur',harga:3000,aktif:true},{nama:'Extra Kerupuk',harga:1000,aktif:true}
+  ],
+  minuman:[
+    {nama:'Es Teh',harga:4000,aktif:true},{nama:'Teh Hangat',harga:4000,aktif:true},{nama:'Air Mineral',harga:3000,aktif:true},{nama:'Es Jeruk',harga:6000,aktif:true}
+  ],
+  stok:['Mangkok','Sendok','Kerupuk','Ayam Suwir']
 };
-
-function initQty(){
- ['produk','extra','minuman'].forEach(k=>qty[k]=activeItems(S,k).map(()=>0));
- stokValue=(S.stok||[]).map(()=>0);
-}
-function saveStokTemp(){
- (S.stok||[]).forEach((n,i)=>{
-  const el=document.getElementById(`stok_${i}`);
-  if(el) stokValue[i]=Number(el.value||0);
- });
-}
-function render(){
- saveStokTemp();
- const tabs=[{id:'produk',nama:'Bubur'},{id:'extra',nama:'Extra'},{id:'minuman',nama:'Minum'},{id:'stok',nama:'Stok'}];
- const activeName=tabs.find(t=>t.id===currentTab)?.nama||'Menu';
- area.innerHTML=`
- <div class="tab-wrap">
-  ${tabs.map(t=>`<button class="${currentTab===t.id?'green':'ghost'}" onclick="gantiTab('${t.id}')">${t.nama}</button>`).join('')}
- </div>
- <div class="card kasir-card">
-  <div class="compact-title">
-   <h2>${activeName}</h2>
-   <span class="pill">${currentTab==='stok'?'Sisa barang':'Tap tambah qty'}</span>
-  </div>
-  ${currentTab==='stok'?`
-   <div class="stok-grid">
-    ${(S.stok||[]).map((n,i)=>`
-     <label>${n}
-      <input id="stok_${i}" type="number" placeholder="Sisa" value="${stokValue[i]||''}" oninput="stokValue[${i}]=Number(this.value||0)">
-     </label>`).join('')}
-   </div>`:`
-   <div class="menu-grid">
-    ${activeItems(S,currentTab).map((x,i)=>`
-     <button class="ghost menu-btn" onclick="add('${currentTab}',${i})">
-      <div><b>${x.nama}</b><span class="muted">${rupiah(x.harga)}</span></div>
-      <div class="qty-line"><span class="qty-badge">Qty: <span id="q_${currentTab}_${i}">${qty[currentTab][i]||0}</span></span><span class="pill">+</span></div>
-     </button>`).join('')}
-   </div>`}
- </div>`;
- hitung();
-}
-function gantiTab(x){saveStokTemp();currentTab=x;render()}
-function add(k,i){qty[k][i]=Number(qty[k][i]||0)+1;const el=document.getElementById(`q_${k}_${i}`);if(el)el.textContent=qty[k][i];hitung()}
-function resetQty(){
- ['produk','extra','minuman'].forEach(k=>qty[k]=qty[k].map(()=>0));
- stokValue=stokValue.map(()=>0);
- catatan.value='';
- render();hitung();
-}
-function kumpul(){
- saveStokTemp();
- let data={tanggal:tanggal.value,catatan:catatan.value,konsep:'IndexInput'};
- ['produk','extra','minuman'].forEach(k=>data[k]=activeItems(S,k).map((x,i)=>({...x,jumlah:Number(qty[k][i]||0)})));
- data.stok=(S.stok||[]).map((n,i)=>({nama:n,sisa:Number(stokValue[i]||0)}));
- return calcReport(data);
-}
-function hitung(){total.innerText=rupiah(kumpul().total)}
-async function simpanLaporan(){
- const data=kumpul();
- if(!data.semua.length && !data.stok.some(x=>x.sisa>0)){alert('Belum ada item yang diinput');return}
- await saveReport(data);
- resetQty();
- alert('Tersimpan. Input sudah direset.');
-}
-function kirim(){openWA(kumpul(),S)}
+let S=loadSettings(); let currentPage='input'; let currentTab='produk';
+let qty={produk:[],extra:[],minuman:[]}; let stokValue=[];
+function $(id){return document.getElementById(id)}
+function today(){return new Date().toISOString().slice(0,10)}
+function nowFull(){const d=new Date(); const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`}
+function rupiah(n){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(n||0))}
+function loadSettings(){try{return {...defaultSettings,...JSON.parse(localStorage.getItem('settings_bubur')||'{}')}}catch(e){return structuredClone(defaultSettings)}}
+function saveSettings(){localStorage.setItem('settings_bubur',JSON.stringify(S))}
+function activeItems(k){return (S[k]||[]).filter(x=>x.aktif!==false)}
+function initQty(){['produk','extra','minuman'].forEach(k=>qty[k]=activeItems(k).map(()=>0)); stokValue=(S.stok||[]).map(()=>0)}
+function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,1);r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:'id'})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function saveReport(data){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(data);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
+async function getAllReports(){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readonly');const req=tx.objectStore(STORE).getAll();req.onsuccess=()=>resolve(req.result.sort((a,b)=>String(b.waktu).localeCompare(String(a.waktu))));req.onerror=()=>reject(req.error)})}
+async function deleteReport(id){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
+async function clearReports(){const db=await openDB();return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
+function hitungData(){let total=0, jumlah=0; const data={tanggal:$('tanggal')?.value||today(),catatan:$('catatan')?.value||'',waktu:nowFull(),produk:[],extra:[],minuman:[],stok:[]}; ['produk','extra','minuman'].forEach(k=>{data[k]=activeItems(k).map((x,i)=>{const j=Number(qty[k][i]||0); total+=j*Number(x.harga||0); jumlah+=j; return {...x,jumlah:j,subtotal:j*Number(x.harga||0)}}).filter(x=>x.jumlah>0)}); data.stok=(S.stok||[]).map((n,i)=>({nama:n,sisa:Number(stokValue[i]||0)})).filter(x=>x.sisa>0); data.total=total; data.jumlah=jumlah; return data}
+function renderInput(){const tabs=[['produk','Bubur'],['extra','Extra'],['minuman','Minum'],['stok','Stok']]; const d=hitungData(); $('pageInput').innerHTML=`
+<div class="card"><div class="row"><input type="date" id="tanggal" value="${d.tanggal}"><input id="catatan" placeholder="Catatan transaksi" value="${d.catatan||''}"></div><div class="title" style="margin-top:10px;margin-bottom:0"><span class="pill">Per transaksi</span><div class="total" id="totalText">${rupiah(d.total)}</div></div></div>
+<div class="tabs">${tabs.map(t=>`<button class="${currentTab===t[0]?'active':''}" onclick="currentTab='${t[0]}';renderInput()">${t[1]}</button>`).join('')}</div>
+<div class="card"><div class="title"><h2>${tabs.find(t=>t[0]===currentTab)[1]}</h2><span class="pill">${currentTab==='stok'?'Sisa barang':'Sentuh + / -'}</span></div>${currentTab==='stok'?renderStok():renderMenu(currentTab)}</div>
+<div class="card"><div class="actions"><button class="green" onclick="simpanTransaksi()">Simpan</button><button class="soft" onclick="kirimWA()">WA</button><button class="ghost" onclick="resetTransaksi()">Reset</button></div></div>`; $('tanggal').oninput=()=>{}; $('catatan').oninput=()=>{}; updateTotal()}
+function renderMenu(k){return `<div class="menu-grid">${activeItems(k).map((x,i)=>`<div class="ghost menu-btn"><div><b>${x.nama}</b><br><span class="muted">${rupiah(x.harga)}</span></div><div class="qty-line"><span class="qty-badge">Qty: <span id="q_${k}_${i}">${qty[k][i]||0}</span></span><span class="pill">${rupiah((qty[k][i]||0)*x.harga)}</span></div><div class="qty-actions"><button onclick="ubahQty('${k}',${i},-1)">−</button><button class="green" onclick="ubahQty('${k}',${i},1)">+</button></div></div>`).join('')}</div>`}
+function renderStok(){return `<div class="list">${(S.stok||[]).map((n,i)=>`<label>${n}<input type="number" inputmode="numeric" placeholder="Sisa" value="${stokValue[i]||''}" oninput="stokValue[${i}]=Number(this.value||0)"></label>`).join('')}</div>`}
+function ubahQty(k,i,n){qty[k][i]=Math.max(0,Number(qty[k][i]||0)+n); const el=$(`q_${k}_${i}`); if(el)el.textContent=qty[k][i]; updateTotal()}
+function updateTotal(){const el=$('totalText'); if(el) el.textContent=rupiah(hitungData().total)}
+function resetTransaksi(){initQty(); const oldDate=$('tanggal')?.value||today(); renderInput(); $('tanggal').value=oldDate; $('catatan').value=''; updateTotal()}
+async function simpanTransaksi(){const data=hitungData(); if(data.jumlah===0 && data.stok.length===0){alert('Belum ada item yang diinput');return} data.id=Date.now(); await saveReport(data); initQty(); renderInput(); alert('Transaksi tersimpan dan input sudah direset')}
+function pesan(data){let lines=[`*Bubur Ayam Bandung Akang Hamzah*`,`Waktu: ${data.waktu}`,`Tanggal: ${data.tanggal}`,'']; ['produk','extra','minuman'].forEach(k=>{if(data[k].length){lines.push(`*${k.toUpperCase()}*`);data[k].forEach(x=>lines.push(`- ${x.nama} x${x.jumlah} = ${rupiah(x.subtotal)}`));lines.push('')}}); if(data.stok.length){lines.push('*STOK/SISA*');data.stok.forEach(x=>lines.push(`- ${x.nama}: ${x.sisa}`));lines.push('')} lines.push(`*TOTAL: ${rupiah(data.total)}*`); if(data.catatan)lines.push(`Catatan: ${data.catatan}`); return lines.join('\n')}
+function kirimWA(){const data=hitungData(); const no=(S.wa||'').replace(/\D/g,''); window.open(`https://wa.me/${no}?text=${encodeURIComponent(pesan(data))}`,'_blank')}
+async function renderLaporan(){const arr=await getAllReports(); $('pageLaporan').innerHTML=`<div class="card"><div class="title"><h2>Laporan</h2><span class="pill">${arr.length} transaksi</span></div><div class="row"><input type="date" id="filterTgl" value="${today()}" onchange="renderLaporan()"><button class="blue" onclick="renderLaporan()">Refresh</button></div></div><div class="tabs"><button class="active" onclick="laporanJenis('transaksi')">Transaksi</button><button onclick="laporanJenis('harian')">Harian</button><button onclick="laporanJenis('bulanan')">Bulanan</button><button onclick="laporanJenis('hapus')">Hapus</button></div><div id="laporanArea"></div>`; laporanJenis('transaksi')}
+async function laporanJenis(jenis){const arr=await getAllReports(); if(jenis==='transaksi'){$('laporanArea').innerHTML=arr.length?`<div class="list">${arr.map(r=>cardReport(r)).join('')}</div>`:`<div class="card empty">Belum ada transaksi.</div>`} if(jenis==='harian')renderRekap('day',arr); if(jenis==='bulanan')renderRekap('month',arr); if(jenis==='hapus'){$('laporanArea').innerHTML=`<div class="card danger-zone"><h2>Hapus Data</h2><p class="muted">Gunakan hanya jika data sudah tidak diperlukan.</p><button class="red" onclick="hapusSemua()">Hapus Semua Laporan</button></div>`}}
+function cardReport(r){return `<div class="report-card"><div class="report-head"><div><b>${r.waktu}</b><br><span class="muted">${r.catatan||'Tanpa catatan'}</span></div><div class="total">${rupiah(r.total)}</div></div><table class="table"><tbody>${['produk','extra','minuman'].flatMap(k=>(r[k]||[]).map(x=>`<tr><td>${x.nama}</td><td class="right">${x.jumlah}</td><td class="right">${rupiah(x.subtotal)}</td></tr>`)).join('')}</tbody></table><button class="mini red" onclick="hapusSatu(${r.id})">Hapus</button></div>`}
+function renderRekap(mode,arr){const map={}; arr.forEach(r=>{const key=mode==='day'?r.tanggal:r.tanggal.slice(0,7); if(!map[key])map[key]={jumlah:0,total:0,item:{}}; map[key].jumlah+=r.jumlah||0; map[key].total+=r.total||0; ['produk','extra','minuman'].forEach(k=>(r[k]||[]).forEach(x=>{map[key].item[x.nama]=(map[key].item[x.nama]||0)+x.jumlah}))}); const rows=Object.entries(map).sort((a,b)=>b[0].localeCompare(a[0])); $('laporanArea').innerHTML=rows.length?`<div class="list">${rows.map(([tgl,v])=>`<div class="report-card"><div class="report-head"><div><b>${tgl}</b><br><span class="muted">${v.jumlah} item terjual</span></div><div class="total">${rupiah(v.total)}</div></div><table class="table"><thead><tr><th>Item</th><th class="right">Qty</th></tr></thead><tbody>${Object.entries(v.item).map(([n,q])=>`<tr><td>${n}</td><td class="right">${q}</td></tr>`).join('')}</tbody></table></div>`).join('')}</div>`:`<div class="card empty">Belum ada data.</div>`}
+async function hapusSatu(id){if(confirm('Hapus transaksi ini?')){await deleteReport(id);renderLaporan()}}
+async function hapusSemua(){if(confirm('Yakin hapus semua laporan?')){await clearReports();renderLaporan()}}
+function renderSetting(){$('pageSetting').innerHTML=`<div class="card"><div class="title"><h2>Setting</h2><span class="pill">Menu & WA</span></div><label>Nomor WhatsApp<input id="setWa" value="${S.wa||''}" placeholder="628xxxx"></label></div>${['produk','extra','minuman'].map(k=>settingGroup(k)).join('')}<div class="card"><div class="title"><h2>Stok</h2><button class="mini blue" onclick="tambahStok()">Tambah</button></div><div class="list">${(S.stok||[]).map((n,i)=>`<div class="item-row"><input value="${n}" onchange="S.stok[${i}]=this.value"><button onclick="naikStok(${i})">↑</button><button class="red" onclick="hapusStok(${i})">×</button></div>`).join('')}</div></div><div class="card"><button class="green" onclick="simpanSetting()">Simpan Setting</button></div>`}
+function settingGroup(k){const title={produk:'Menu Bubur',extra:'Extra Topping',minuman:'Minuman'}[k]; return `<div class="card"><div class="title"><h2>${title}</h2><button class="mini blue" onclick="tambahItem('${k}')">Tambah</button></div><div class="list">${(S[k]||[]).map((x,i)=>`<div class="item-row"><input value="${x.nama}" onchange="S.${k}[${i}].nama=this.value"><input type="number" value="${x.harga}" onchange="S.${k}[${i}].harga=Number(this.value||0)"><button class="red" onclick="hapusItem('${k}',${i})">×</button></div>`).join('')}</div></div>`}
+function tambahItem(k){S[k].push({nama:'Item Baru',harga:0,aktif:true});renderSetting()} function hapusItem(k,i){S[k].splice(i,1);renderSetting()} function tambahStok(){S.stok.push('Stok Baru');renderSetting()} function hapusStok(i){S.stok.splice(i,1);renderSetting()} function naikStok(i){if(i>0){[S.stok[i-1],S.stok[i]]=[S.stok[i],S.stok[i-1]];renderSetting()}}
+function simpanSetting(){S.wa=$('setWa').value; saveSettings(); initQty(); alert('Setting tersimpan'); renderInput()}
+async function renderData(){const arr=await getAllReports(); $('pageData').innerHTML=`<div class="card"><div class="title"><h2>Data</h2><span class="pill">Backup</span></div><div class="summary"><div class="sum-box"><small>Transaksi</small><b>${arr.length}</b></div><div class="sum-box"><small>Total Uang</small><b>${rupiah(arr.reduce((a,b)=>a+(b.total||0),0))}</b></div></div><div class="wide-actions" style="margin-top:10px"><button class="blue" onclick="exportData()">Export JSON</button><button class="soft" onclick="document.getElementById('importFile').click()">Import</button></div><input id="importFile" class="hide" type="file" accept="application/json" onchange="importData(this.files[0])"></div>`}
+async function exportData(){const data={settings:S,reports:await getAllReports()}; const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backup-bubur.json'; a.click()}
+async function importData(file){if(!file)return; const text=await file.text(); const data=JSON.parse(text); if(data.settings){S=data.settings;saveSettings()} if(data.reports){for(const r of data.reports)await saveReport(r)} alert('Import selesai'); showPage('data')}
+function showPage(p){currentPage=p; ['input','laporan','setting','data'].forEach(x=>{$('page'+x[0].toUpperCase()+x.slice(1)).classList.toggle('hide',x!==p); $('nav'+x[0].toUpperCase()+x.slice(1)).classList.toggle('active',x===p)}); if(p==='input')renderInput(); if(p==='laporan')renderLaporan(); if(p==='setting')renderSetting(); if(p==='data')renderData()}
+initQty(); renderInput();
 </script>
 </body>
 </html>
