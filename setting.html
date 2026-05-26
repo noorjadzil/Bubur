@@ -1,15 +1,188 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Setting - Bubur Ayam Bandung Akang Hamzah</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="hero"><h1>Setting</h1><p>Edit menu, harga, stok, dan nomor WhatsApp.</p></header>
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Setting - Bubur Ayam Bandung Akang Hamzah</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+.setrow{
+  display:grid;
+  grid-template-columns:42px 42px 1fr 95px;
+  gap:8px;
+  align-items:center;
+  margin:10px 0;
+}
+.setrow input{
+  min-width:0;
+}
+.setrow .danger{
+  grid-column:1 / -1;
+  padding:10px;
+}
+.catHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+}
+.catHead h2{
+  margin:0;
+  font-size:18px;
+}
+@media(max-width:480px){
+  .hero{
+    padding:18px 16px;
+  }
+  .hero h1{
+    font-size:24px;
+  }
+  .panel{
+    padding:14px;
+    border-radius:18px;
+  }
+  .row{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .setrow{
+    grid-template-columns:38px 38px 1fr 82px;
+    gap:7px;
+  }
+  .setrow button{
+    padding:10px 8px;
+    border-radius:12px;
+  }
+  .setrow input{
+    padding:10px;
+    font-size:14px;
+  }
+}
+</style>
+</head>
+
+<body>
+<header class="hero">
+  <h1>Setting</h1>
+  <p>Edit menu, harga, dan stok.</p>
+</header>
+
 <main class="wrap">
-<section class="panel"><label>Nama Brand<input id="brand"></label><label>Nomor WhatsApp tujuan<input id="wa" placeholder="628xxxx"></label><div class="row"><button class="green" onclick="save()">Simpan Setting</button><button class="ghost" onclick="resetAll()">Reset Default</button></div></section>
-<section id="box"></section>
-</main><div id="nav"></div><script src="db.js"></script><script>
+  <section class="panel">
+    <label>
+      Nama Brand
+      <input id="brand">
+    </label>
+
+    <div class="row" style="margin-top:12px">
+      <button class="green" onclick="save()">Simpan Setting</button>
+      <button class="ghost" onclick="resetAll()">Reset Default</button>
+    </div>
+  </section>
+
+  <section id="box"></section>
+</main>
+
+<div id="nav"></div>
+
+<script src="db.js"></script>
+<script>
 let cfg;
-window.onload=async()=>{document.getElementById('nav').innerHTML=nav('setting'); cfg=await getSettings(); brand.value=cfg.brand||''; wa.value=cfg.wa||''; render();}
-function render(){ box.innerHTML=['produk','extra','minuman'].map(k=>`<section class="panel"><div class="catHead"><h2>${k==='produk'?'Menu Bubur':k==='extra'?'Extra Topping':'Minuman'}</h2><button class="soft" onclick="addItem('${k}')">Tambah</button></div>${(cfg[k]||[]).map((it,i)=>`<div class="setrow"><button onclick="move('${k}',${i},-1)">↑</button><button onclick="move('${k}',${i},1)">↓</button><input value="${it.nama}" onchange="cfg['${k}'][${i}].nama=this.value"><input type="number" value="${it.harga}" onchange="cfg['${k}'][${i}].harga=Number(this.value)"><button class="danger" onclick="cfg['${k}'].splice(${i},1);render()">Hapus</button></div>`).join('')}</section>`).join('')+`<section class="panel"><div class="catHead"><h2>Stok</h2><button class="soft" onclick="cfg.stok.push('Item Baru');render()">Tambah</button></div>${(cfg.stok||[]).map((n,i)=>`<div class="setrow"><button onclick="moveStok(${i},-1)">↑</button><button onclick="moveStok(${i},1)">↓</button><input value="${n}" onchange="cfg.stok[${i}]=this.value"><span></span><button class="danger" onclick="cfg.stok.splice(${i},1);render()">Hapus</button></div>`).join('')}</section>`}
-function addItem(k){cfg[k].push({nama:'Item Baru',harga:0,aktif:true});render()}
-function move(k,i,d){const j=i+d;if(j<0||j>=cfg[k].length)return;[cfg[k][i],cfg[k][j]]=[cfg[k][j],cfg[k][i]];render()}
-function moveStok(i,d){const j=i+d;if(j<0||j>=cfg.stok.length)return;[cfg.stok[i],cfg.stok[j]]=[cfg.stok[j],cfg.stok[i]];render()}
-async function save(){cfg.brand=brand.value;cfg.wa=wa.value.trim();await saveSettings(cfg);alert('Setting tersimpan')}
-async function resetAll(){if(confirm('Reset setting ke bawaan?')){cfg=await resetSettings();brand.value=cfg.brand;wa.value=cfg.wa;render()}}
-</script></body></html>
+
+window.onload = async () => {
+  document.getElementById('nav').innerHTML = nav('setting');
+  cfg = await getSettings();
+
+  brand.value = cfg.brand || '';
+
+  if (!cfg.produk) cfg.produk = [];
+  if (!cfg.extra) cfg.extra = [];
+  if (!cfg.minuman) cfg.minuman = [];
+  if (!cfg.stok) cfg.stok = [];
+
+  render();
+};
+
+function render(){
+  box.innerHTML =
+    ['produk','extra','minuman'].map(k => `
+      <section class="panel">
+        <div class="catHead">
+          <h2>${k==='produk' ? 'Menu Bubur' : k==='extra' ? 'Extra Topping' : 'Minuman'}</h2>
+          <button class="soft" onclick="addItem('${k}')">Tambah</button>
+        </div>
+
+        ${(cfg[k] || []).map((it,i) => `
+          <div class="setrow">
+            <button onclick="move('${k}',${i},-1)">↑</button>
+            <button onclick="move('${k}',${i},1)">↓</button>
+            <input value="${it.nama}" placeholder="Nama item" onchange="cfg['${k}'][${i}].nama=this.value">
+            <input type="number" value="${it.harga}" placeholder="Harga" onchange="cfg['${k}'][${i}].harga=Number(this.value)">
+            <button class="danger" onclick="cfg['${k}'].splice(${i},1);render()">Hapus</button>
+          </div>
+        `).join('')}
+      </section>
+    `).join('') +
+
+    `<section class="panel">
+      <div class="catHead">
+        <h2>Stok</h2>
+        <button class="soft" onclick="cfg.stok.push('Item Baru');render()">Tambah</button>
+      </div>
+
+      ${(cfg.stok || []).map((n,i) => `
+        <div class="setrow">
+          <button onclick="moveStok(${i},-1)">↑</button>
+          <button onclick="moveStok(${i},1)">↓</button>
+          <input value="${n}" placeholder="Nama stok" onchange="cfg.stok[${i}]=this.value">
+          <span></span>
+          <button class="danger" onclick="cfg.stok.splice(${i},1);render()">Hapus</button>
+        </div>
+      `).join('')}
+    </section>`;
+}
+
+function addItem(k){
+  cfg[k].push({
+    nama:'Item Baru',
+    harga:0,
+    aktif:true
+  });
+  render();
+}
+
+function move(k,i,d){
+  const j = i + d;
+  if(j < 0 || j >= cfg[k].length) return;
+  [cfg[k][i], cfg[k][j]] = [cfg[k][j], cfg[k][i]];
+  render();
+}
+
+function moveStok(i,d){
+  const j = i + d;
+  if(j < 0 || j >= cfg.stok.length) return;
+  [cfg.stok[i], cfg.stok[j]] = [cfg.stok[j], cfg.stok[i]];
+  render();
+}
+
+async function save(){
+  cfg.brand = brand.value;
+  cfg.wa = '';
+  await saveSettings(cfg);
+  alert('Setting tersimpan');
+}
+
+async function resetAll(){
+  if(confirm('Reset setting ke bawaan?')){
+    cfg = await resetSettings();
+    brand.value = cfg.brand || '';
+    cfg.wa = '';
+    render();
+  }
+}
+</script>
+</body>
+</html>
