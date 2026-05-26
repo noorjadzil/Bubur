@@ -1,115 +1,14 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Setting</title><style>
-:root{--navy:#0f172a;--blue:#1e3a8a;--sky:#2563eb;--bg:#f4f7fb;--card:#fff;--muted:#64748b;--line:#dbe3ef;--green:#16a34a;--red:#dc2626;--amber:#d97706}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--navy)}
-.hero{background:linear-gradient(135deg,#0f172a,#1e3a8a 55%,#2563eb);color:#fff;padding:24px 16px 72px;border-bottom-left-radius:28px;border-bottom-right-radius:28px;box-shadow:0 16px 40px rgba(15,23,42,.22)}
-.hero-inner{max-width:1040px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand h1{margin:0;font-size:25px}.brand p{margin:6px 0 0;color:#dbeafe;font-size:13px}
-.nav{display:flex;gap:8px;flex-wrap:wrap}.nav a{color:#fff;text-decoration:none;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.24);padding:10px 12px;border-radius:999px;font-weight:800;font-size:13px}.nav a.active,.nav a:hover{background:#fff;color:#1e3a8a}
-.wrap{max-width:1040px;margin:-46px auto 40px;padding:0 14px}.card{background:rgba(255,255,255,.96);border:1px solid rgba(226,232,240,.9);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:0 14px 35px rgba(15,23,42,.09)}
-.card h2{margin:0 0 12px;font-size:18px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{display:block;font-weight:800;font-size:13px;margin:6px 0;color:#334155}
-input,textarea,select{width:100%;border:1px solid #cbd5e1;background:#fff;border-radius:14px;padding:12px;font:inherit;outline:none}input:focus,textarea:focus,select:focus{border-color:#2563eb;box-shadow:0 0 0 4px rgba(37,99,235,.12)}textarea{min-height:84px;resize:vertical}
-.table-box{overflow:auto;border-radius:16px;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;min-width:680px;background:#fff}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:center;font-size:14px}th{background:#eef4ff;color:#1e3a8a;font-weight:900}.left{text-align:left}.num{max-width:120px;text-align:center}
-.btns{display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:14px;padding:12px 14px;font-weight:900;cursor:pointer;color:#fff;background:#1e3a8a;box-shadow:0 10px 18px rgba(30,58,138,.18)}.btn.green{background:var(--green)}.btn.red{background:var(--red)}.btn.amber{background:var(--amber)}.btn.light{background:#e2e8f0;color:#0f172a}.btn:active{transform:scale(.99)}
-.total{display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,#ecfeff,#eff6ff);border:1px solid #bfdbfe;border-radius:18px;padding:14px;margin:12px 0}.total b{font-size:24px;color:#1e3a8a}.muted{font-size:12px;color:var(--muted)}.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#e0f2fe;color:#075985;padding:6px 10px;font-weight:900;font-size:12px}.empty{padding:18px;text-align:center;color:#64748b;background:#fff;border-radius:16px;border:1px dashed #cbd5e1}.row-actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}.smallbtn{border:0;border-radius:10px;padding:8px 10px;font-weight:900;cursor:pointer;background:#e2e8f0;color:#0f172a}.smallbtn.add{background:#dbeafe;color:#1e3a8a}.smallbtn.move{background:#dcfce7;color:#166534}.smallbtn.danger{background:#fee2e2;color:#991b1b}
-@media(max-width:720px){.hero-inner{display:block}.nav{margin-top:16px}.grid{grid-template-columns:1fr}.brand h1{font-size:22px}table{min-width:620px}.btn{width:100%}.total{display:block}.total b{display:block;margin-top:6px}}
-</style></head><body>
-<header class="hero"><div class="hero-inner"><div class="brand"><h1>Menu Setting</h1><p>Atur macam, item, harga, stok, dan catatan barang</p></div><nav class="nav"><a href="index.html">Input</a><a href="laporan.html">Laporan</a><a class="active" href="setting.html">Setting</a></nav></div></header>
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Setting</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="hero"><h1>Setting</h1><p>Atur nama usaha, item, harga, kategori, dan WhatsApp.</p></header>
 <main class="wrap">
-<section class="card"><h2>Setting Item Harga</h2><p class="muted">Ubah nama/harga, tambah item, atau hapus item. Setelah disimpan, halaman input otomatis mengikuti setting ini.</p><div id="produkBox"></div><div id="extraBox"></div><div id="minumanBox"></div><div class="btns"><button class="btn green" onclick="simpanSetting()">Simpan Setting</button><button class="btn amber" onclick="resetSetting()">Reset Default</button></div></section>
-<section class="card"><h2>Setting Stok Perlengkapan</h2><div id="stokBox"></div><button class="btn light" onclick="tambahNama('stok')">+ Tambah Stok</button></section>
-<section class="card"><h2>Setting Barang Kurang</h2><div id="kurangBox"></div><button class="btn light" onclick="tambahNama('kurang')">+ Tambah Barang Kurang</button></section>
-</main>
-<script>
-const DB_NAME="laporan_bubur_indexeddb_v1";
-const DB_VERSION=1;
-const DEFAULT_SETTINGS={
-  produk:[{nama:"Bubur Ori",harga:7000},{nama:"Bubur Cakwe",harga:12000},{nama:"Bubur Telur",harga:12000},{nama:"Bubur Ayam Suwir",harga:15000},{nama:"Bubur Abon",harga:17000},{nama:"Bubur Spesial",harga:13000},{nama:"Bubur Istimewa",harga:17000}],
-  extra:[{nama:"Cakwe",harga:2000},{nama:"Ayam Suwir",harga:3000},{nama:"Abon",harga:5000},{nama:"Irisan Telur Dadar",harga:1000},{nama:"Telur Rebus",harga:1000},{nama:"Kuah",harga:500},{nama:"Krupuk",harga:500}],
-  minuman:[{nama:"Puyuh",harga:3000},{nama:"Cleo",harga:1000},{nama:"Teh Anget",harga:3000},{nama:"Es Teh",harga:3000}],
-  stok:["Paper Bowl","Tali Segel","Sendok","Krupuk","Kripik Pangsit","Bawang Goreng","Kacang Kedelai"],
-  kurang:["Cleo","Tisu","Plastik Kecap","Plastik Kuah","Plastik Sambal","Kecap Asin","Kecap Manis","Lada","Kresek Kecil","Kresek Tanggung","Kresek Besar"]
-};
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains("reports"))db.createObjectStore("reports",{keyPath:"tanggal"});if(!db.objectStoreNames.contains("settings"))db.createObjectStore("settings",{keyPath:"key"});};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
-async function getOne(store,key){const db=await openDB();return new Promise((res,rej)=>{const t=db.transaction(store,"readonly");const r=t.objectStore(store).get(key);r.onsuccess=()=>{db.close();res(r.result||null)};r.onerror=()=>{db.close();rej(r.error)}})}
-async function putOne(store,val){const db=await openDB();return new Promise((res,rej)=>{const t=db.transaction(store,"readwrite");t.objectStore(store).put(val);t.oncomplete=()=>{db.close();res(true)};t.onerror=()=>{db.close();rej(t.error)}})}
-async function delOne(store,key){const db=await openDB();return new Promise((res,rej)=>{const t=db.transaction(store,"readwrite");t.objectStore(store).delete(key);t.oncomplete=()=>{db.close();res(true)};t.onerror=()=>{db.close();rej(t.error)}})}
-async function allReports(){const db=await openDB();return new Promise((res,rej)=>{const t=db.transaction("reports","readonly");const r=t.objectStore("reports").getAll();r.onsuccess=()=>{db.close();res((r.result||[]).sort((a,b)=>String(b.tanggal).localeCompare(String(a.tanggal))))};r.onerror=()=>{db.close();rej(r.error)}})}
-async function getSettings(){let data=await getOne("settings","app");if(!data){data={key:"app",...structuredClone(DEFAULT_SETTINGS)};await putOne("settings",data)}return data}
-function rupiah(n){return "Rp "+Number(n||0).toLocaleString("id-ID")}
-function todayID(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
-
-let SET=null;
-async function init(){SET=await getSettings();renderAll()}
-function renderAll(){renderBarang("produkBox","produk","Penjualan Bubur");renderBarang("extraBox","extra","Extra Topping / Tambahan");renderBarang("minumanBox","minuman","Minuman / Lainnya");renderNama("stokBox","stok");renderNama("kurangBox","kurang")}
-function renderBarang(box,key,title){
-  const data=SET[key]||[];
-  let html=`<h2 style="margin-top:18px">${title}</h2><div class="table-box"><table><thead><tr><th>Nama</th><th>Harga</th><th>Aksi</th></tr></thead><tbody>`;
-  data.forEach((it,i)=>{
-    html+=`<tr>
-      <td><input value="${esc(it.nama)}" oninput="SET.${key}[${i}].nama=this.value"></td>
-      <td><input type="number" value="${Number(it.harga||0)}" oninput="SET.${key}[${i}].harga=Number(this.value||0)"></td>
-      <td>
-        <div class="row-actions">
-          <button class="smallbtn add" onclick="tambahItem('${key}',${i})">+ Atas</button>
-          <button class="smallbtn add" onclick="tambahItem('${key}',${i+1})">+ Bawah</button>
-          <button class="smallbtn move" onclick="naikItem('${key}',${i})" title="Naik">↑</button>
-          <button class="smallbtn move" onclick="turunItem('${key}',${i})" title="Turun">↓</button>
-          <button class="smallbtn danger" onclick="hapusItem('${key}',${i})">Hapus</button>
-        </div>
-      </td>
-    </tr>`;
-  });
-  html+=`</tbody></table></div>
-    <div class="btns" style="margin-top:10px">
-      <button class="btn light" onclick="tambahItem('${key}',0)">+ Tambah Paling Atas</button>
-      <button class="btn light" onclick="tambahItem('${key}')">+ Tambah Paling Bawah</button>
-    </div>`;
-  document.getElementById(box).innerHTML=html;
-}
-function renderNama(box,key){
-  let html='<div class="table-box"><table><thead><tr><th>Nama</th><th>Aksi</th></tr></thead><tbody>';
-  (SET[key]||[]).forEach((nama,i)=>{
-    html+=`<tr>
-      <td><input value="${esc(nama)}" oninput="SET.${key}[${i}]=this.value"></td>
-      <td>
-        <div class="row-actions">
-          <button class="smallbtn add" onclick="tambahNama('${key}',${i})">+ Atas</button>
-          <button class="smallbtn add" onclick="tambahNama('${key}',${i+1})">+ Bawah</button>
-          <button class="smallbtn move" onclick="naikNama('${key}',${i})" title="Naik">↑</button>
-          <button class="smallbtn move" onclick="turunNama('${key}',${i})" title="Turun">↓</button>
-          <button class="smallbtn danger" onclick="hapusNama('${key}',${i})">Hapus</button>
-        </div>
-      </td>
-    </tr>`;
-  });
-  html+='</tbody></table></div>';
-  document.getElementById(box).innerHTML=html;
-}
-function tambahItem(key,index=null){
-  const itemBaru={nama:"Item Baru",harga:0};
-  if(index===null){SET[key].push(itemBaru)}else{SET[key].splice(index,0,itemBaru)}
-  renderAll();
-}
-function hapusItem(key,i){if(confirm("Hapus item ini?")){SET[key].splice(i,1);renderAll()}}
-function tambahNama(key,index=null){
-  const namaBaru="Nama Baru";
-  if(index===null){SET[key].push(namaBaru)}else{SET[key].splice(index,0,namaBaru)}
-  renderAll();
-}
-function hapusNama(key,i){if(confirm("Hapus data ini?")){SET[key].splice(i,1);renderAll()}}
-function naikItem(key,i){
-  if(i<=0)return;
-  [SET[key][i-1],SET[key][i]]=[SET[key][i],SET[key][i-1]];
-  renderAll();
-}
-function turunItem(key,i){
-  if(i>=SET[key].length-1)return;
-  [SET[key][i+1],SET[key][i]]=[SET[key][i],SET[key][i+1]];
-  renderAll();
-}
-function naikNama(key,i){naikItem(key,i)}
-function turunNama(key,i){turunItem(key,i)}
-async function simpanSetting(){SET.key="app";await putOne("settings",SET);alert("Setting berhasil disimpan")}
-async function resetSetting(){if(confirm("Kembalikan setting ke default awal?")){SET={key:"app",...structuredClone(DEFAULT_SETTINGS)};await putOne("settings",SET);renderAll();alert("Setting kembali default")}}
-init();
+  <div class="card"><label>Nama Usaha</label><input id="namaUsaha"><label style="margin-top:9px">Nomor WhatsApp</label><input id="wa" placeholder="08xxxxxxxxxx"><button class="green" style="margin-top:10px;width:100%" onclick="simpanSetting()">Simpan Setting</button></div>
+  <div class="card"><div class="section-title"><h2>Tambah Item</h2><span class="pill">Produk baru</span></div><div class="row"><input id="namaBaru" placeholder="Nama item"><input id="hargaBaru" type="number" placeholder="Harga"></div><select id="kategoriBaru" style="margin-top:8px"><option value="produk">Bubur</option><option value="extra">Extra</option><option value="minuman">Minuman</option></select><button class="blue" style="margin-top:9px;width:100%" onclick="tambahItem()">Tambah Item</button></div>
+  <div class="card"><div class="section-title"><h2>Daftar Item</h2><span class="pill">Edit langsung</span></div><div id="itemsArea"></div></div>
+</main><div id="navbox"></div><script src="db.js"></script><script>
+let S;
+window.onload=async()=>{S=await getSettings();navbox.innerHTML=nav('setting');namaUsaha.value=S.namaUsaha||'';wa.value=S.wa||'';renderItems()}
+function renderItems(){itemsArea.innerHTML=(S.items||[]).map((x,i)=>`<div class="setting-item"><div><label>Nama</label><input value="${x.nama}" onchange="S.items[${i}].nama=this.value"></div><div><label>Harga</label><input type="number" value="${x.harga}" onchange="S.items[${i}].harga=Number(this.value||0)"></div><div><label>Kategori</label><select onchange="S.items[${i}].kategori=this.value"><option value="produk" ${x.kategori==='produk'?'selected':''}>Bubur</option><option value="extra" ${x.kategori==='extra'?'selected':''}>Extra</option><option value="minuman" ${x.kategori==='minuman'?'selected':''}>Minuman</option></select></div><button class="${x.aktif===false?'soft':'red'}" onclick="toggleItem(${i})">${x.aktif===false?'Aktifkan':'Nonaktif'}</button></div>`).join('')}
+async function simpanSetting(){S.namaUsaha=namaUsaha.value.trim()||'Kasir Bubur';S.wa=wa.value.trim();await saveSettings(S);alert('Setting tersimpan')}
+async function tambahItem(){const nama=namaBaru.value.trim();const harga=Number(hargaBaru.value||0);if(!nama||!harga){alert('Nama dan harga wajib diisi');return}S.items.push({id:uid(),nama,harga,kategori:kategoriBaru.value,aktif:true});namaBaru.value='';hargaBaru.value='';await saveSettings(S);renderItems();alert('Item ditambahkan')}
+async function toggleItem(i){S.items[i].aktif=S.items[i].aktif===false?true:false;await saveSettings(S);renderItems()}
 </script></body></html>

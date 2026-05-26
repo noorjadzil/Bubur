@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Input Transaksi</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="hero"><h1>Input Transaksi</h1><p>Tap item untuk tambah qty. Setelah simpan langsung reset.</p></header>
+<main class="wrap">
+  <div class="card">
+    <div class="row"><div><label>Tanggal</label><input type="date" id="tanggal"></div><div><label>Catatan</label><input id="catatan" placeholder="Opsional"></div></div>
+    <div class="section-title"><span class="pill" id="waktuNow">Waktu transaksi</span><div class="total" id="total">Rp 0</div></div>
+  </div>
+  <div class="tab-wrap"><button id="tab_produk" onclick="setTab('produk')">Bubur</button><button id="tab_extra" onclick="setTab('extra')">Extra</button><button id="tab_minuman" onclick="setTab('minuman')">Minum</button></div>
+  <div class="card"><div class="section-title"><h2 id="judulTab">Bubur</h2><span class="pill">Tap tambah</span></div><div class="menu-grid" id="grid"></div></div>
+  <div class="card"><div class="actions"><button class="green" onclick="simpan()">Simpan</button><button class="soft" onclick="kirimPreview()">WA</button><button class="ghost" onclick="resetQty()">Reset</button></div></div>
+</main><div id="navbox"></div><script src="db.js"></script><script>
+let S,tab='produk',qty={};
+window.onload=async()=>{S=await getSettings();tanggal.value=today();navbox.innerHTML=nav('input');setInterval(()=>waktuNow.textContent=waktuLengkap(new Date()),1000);render()}
+function setTab(x){tab=x;render()}
+function semuaItem(){return activeItems(S,'produk').concat(activeItems(S,'extra'),activeItems(S,'minuman'))}
+function render(){['produk','extra','minuman'].forEach(k=>document.getElementById('tab_'+k).className=tab===k?'green':'ghost');judulTab.textContent=tab==='produk'?'Bubur':tab==='extra'?'Extra':'Minuman';const items=activeItems(S,tab);grid.innerHTML=items.length?items.map(x=>`<button class="menu-btn" onclick="add('${x.id}')"><div><b>${x.nama}</b><span class="muted small">${rupiah(x.harga)}</span></div><div class="qty-line"><span class="qty-badge">Qty: <span id="q_${x.id}">${qty[x.id]||0}</span></span><span class="pill">+</span></div></button>`).join(''):'<div class="empty">Item belum ada. Tambahkan di Setting.</div>';hitung()}
+function add(id){qty[id]=Number(qty[id]||0)+1;const el=document.getElementById('q_'+id);if(el)el.textContent=qty[id];hitung()}
+function resetQty(){qty={};render()}
+function buatReport(){const baseDate=tanggal.value||today();const now=new Date();const waktu=new Date(`${baseDate}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);const c=calcCart(semuaItem(),qty);return {id:uid(),waktu:waktu.toISOString(),waktuLengkap:waktuLengkap(waktu),tanggal:baseDate,catatan:catatan.value.trim(),items:c.selected,total:c.total}}
+function hitung(){total.textContent=rupiah(calcCart(semuaItem(),qty).total)}
+async function simpan(){const report=buatReport();if(!report.items.length){alert('Belum ada item yang dipilih');return}await saveReport(report);resetQty();catatan.value='';alert('Transaksi tersimpan')}
+function kirimPreview(){const report=buatReport();if(!report.items.length){alert('Belum ada item yang dipilih');return}openWA(report,S)}
+</script></body></html>
