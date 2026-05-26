@@ -1,14 +1,56 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Setting</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="hero"><h1>Setting</h1><p>Atur nama usaha, item, harga, kategori, dan WhatsApp.</p></header>
+<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Setting</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="hero"><h1>Setting</h1><p>Atur nama usaha, item, harga, kategori, stok, dan WhatsApp.</p></header>
 <main class="wrap">
-  <div class="card"><label>Nama Usaha</label><input id="namaUsaha"><label style="margin-top:9px">Nomor WhatsApp</label><input id="wa" placeholder="08xxxxxxxxxx"><button class="green" style="margin-top:10px;width:100%" onclick="simpanSetting()">Simpan Setting</button></div>
-  <div class="card"><div class="section-title"><h2>Tambah Item</h2><span class="pill">Produk baru</span></div><div class="row"><input id="namaBaru" placeholder="Nama item"><input id="hargaBaru" type="number" placeholder="Harga"></div><select id="kategoriBaru" style="margin-top:8px"><option value="produk">Bubur</option><option value="extra">Extra</option><option value="minuman">Minuman</option></select><button class="blue" style="margin-top:9px;width:100%" onclick="tambahItem()">Tambah Item</button></div>
-  <div class="card"><div class="section-title"><h2>Daftar Item</h2><span class="pill">Edit langsung</span></div><div id="itemsArea"></div></div>
-</main><div id="navbox"></div><script src="db.js"></script><script>
-let S;
-window.onload=async()=>{S=await getSettings();navbox.innerHTML=nav('setting');namaUsaha.value=S.namaUsaha||'';wa.value=S.wa||'';renderItems()}
-function renderItems(){itemsArea.innerHTML=(S.items||[]).map((x,i)=>`<div class="setting-item"><div><label>Nama</label><input value="${x.nama}" onchange="S.items[${i}].nama=this.value"></div><div><label>Harga</label><input type="number" value="${x.harga}" onchange="S.items[${i}].harga=Number(this.value||0)"></div><div><label>Kategori</label><select onchange="S.items[${i}].kategori=this.value"><option value="produk" ${x.kategori==='produk'?'selected':''}>Bubur</option><option value="extra" ${x.kategori==='extra'?'selected':''}>Extra</option><option value="minuman" ${x.kategori==='minuman'?'selected':''}>Minuman</option></select></div><button class="${x.aktif===false?'soft':'red'}" onclick="toggleItem(${i})">${x.aktif===false?'Aktifkan':'Nonaktif'}</button></div>`).join('')}
-async function simpanSetting(){S.namaUsaha=namaUsaha.value.trim()||'Kasir Bubur';S.wa=wa.value.trim();await saveSettings(S);alert('Setting tersimpan')}
-async function tambahItem(){const nama=namaBaru.value.trim();const harga=Number(hargaBaru.value||0);if(!nama||!harga){alert('Nama dan harga wajib diisi');return}S.items.push({id:uid(),nama,harga,kategori:kategoriBaru.value,aktif:true});namaBaru.value='';hargaBaru.value='';await saveSettings(S);renderItems();alert('Item ditambahkan')}
-async function toggleItem(i){S.items[i].aktif=S.items[i].aktif===false?true:false;await saveSettings(S);renderItems()}
-</script></body></html>
+<div class="card">
+<label>Nama Usaha</label><input id="namaUsaha">
+<label style="margin-top:8px">Nomor WA tujuan <span class="muted">(contoh: 628123456789)</span></label><input id="wa">
+</div>
+
+<div class="card">
+<div class="section-title" style="margin-top:0"><b>Item Menu</b><button class="soft small" onclick="tambahItem()">+ Item</button></div>
+<div id="items"></div>
+</div>
+
+<div class="card">
+<div class="section-title" style="margin-top:0"><b>Daftar Stok/Sisa</b><button class="soft small" onclick="tambahStok()">+ Stok</button></div>
+<div id="stoks"></div>
+</div>
+
+<div class="card"><button class="green" style="width:100%" onclick="simpan()">Simpan Setting</button></div>
+</main>
+<div id="nav"></div>
+<script src="db.js"></script>
+<script>
+let S, flat=[];
+window.onload=async()=>{document.getElementById('nav').innerHTML=nav('setting');S=await getSettings();toFlat();render()}
+function toFlat(){flat=[];['produk','extra','minuman'].forEach(k=>(S[k]||[]).forEach(x=>flat.push({...x,kategori:k})))}
+function fromFlat(){S.produk=flat.filter(x=>x.kategori==='produk');S.extra=flat.filter(x=>x.kategori==='extra');S.minuman=flat.filter(x=>x.kategori==='minuman')}
+function render(){
+ namaUsaha.value=S.namaUsaha||'';wa.value=S.wa||'';
+ items.innerHTML=flat.map((x,i)=>`
+ <div class="setting-item">
+  <div><label>Nama</label><input value="${x.nama||''}" oninput="flat[${i}].nama=this.value"></div>
+  <div><label>Harga</label><input type="number" value="${x.harga||0}" oninput="flat[${i}].harga=Number(this.value||0)"></div>
+  <div><label>Kategori</label><select onchange="flat[${i}].kategori=this.value">
+   <option value="produk" ${x.kategori==='produk'?'selected':''}>Bubur</option>
+   <option value="extra" ${x.kategori==='extra'?'selected':''}>Extra</option>
+   <option value="minuman" ${x.kategori==='minuman'?'selected':''}>Minum</option>
+  </select></div>
+  <button class="red small" onclick="hapusItem(${i})">Hapus</button>
+ </div>`).join('');
+ stoks.innerHTML=(S.stok||[]).map((x,i)=>`
+ <div class="setting-item" style="grid-template-columns:1fr auto">
+  <div><label>Nama stok</label><input value="${x||''}" oninput="S.stok[${i}]=this.value"></div>
+  <button class="red small" onclick="hapusStok(${i})">Hapus</button>
+ </div>`).join('');
+}
+function tambahItem(){flat.push({nama:'Item Baru',harga:0,kategori:'produk'});render()}
+function hapusItem(i){flat.splice(i,1);render()}
+function tambahStok(){if(!S.stok)S.stok=[];S.stok.push('Stok Baru');render()}
+function hapusStok(i){S.stok.splice(i,1);render()}
+async function simpan(){S.namaUsaha=namaUsaha.value;S.wa=wa.value;fromFlat();await saveSettings(S);alert('Setting tersimpan')}
+</script>
+</body></html>

@@ -1,21 +1,72 @@
-<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan</title><link rel="stylesheet" href="style.css"></head><body>
+<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan</title><link rel="stylesheet" href="style.css"></head>
+<body>
 <header class="hero"><h1>Laporan</h1><p>Per transaksi, per hari, dan per bulan.</p></header>
 <main class="wrap">
-  <div class="tab-wrap"><button id="tab_trx" onclick="setMode('trx')">Transaksi</button><button id="tab_hari" onclick="setMode('hari')">Per Hari</button><button id="tab_bulan" onclick="setMode('bulan')">Per Bulan</button></div>
-  <div class="card"><div class="row"><input type="date" id="filterTanggal" onchange="render()"><button class="ghost" onclick="filterTanggal.value='';render()">Semua</button></div></div>
-  <div id="area" class="list"></div>
-  <div class="card danger-zone"><button class="red" onclick="hapusSemua()">Hapus Semua Laporan</button></div>
-</main><div id="navbox"></div><script src="db.js"></script><script>
-let reports=[],mode='trx';
-window.onload=async()=>{navbox.innerHTML=nav('laporan');reports=await getReports();render()}
-function setMode(x){mode=x;render()}
-function filtered(){return filterTanggal.value?reports.filter(r=>hariKey(r.waktu)===filterTanggal.value):reports}
-function render(){['trx','hari','bulan'].forEach(k=>document.getElementById('tab_'+k).className=mode===k?'green':'ghost');if(mode==='trx')renderTrx();if(mode==='hari')renderHari();if(mode==='bulan')renderBulan()}
-function renderTrx(){const data=filtered();area.innerHTML=data.length?data.map(r=>`<div class="item-card"><div class="item-head"><div><div class="item-title">${formatDateTime(r.waktu)}</div><div class="muted small">${r.items.length} item ${r.catatan?'• '+r.catatan:''}</div></div><button class="ghost" onclick="hapus('${r.id}')">Hapus</button></div><hr style="border:0;border-top:1px solid #e2e8f0">${r.items.map(x=>`<div class="item-head small"><span>${x.nama} x${x.jumlah}</span><b>${rupiah(x.subtotal)}</b></div>`).join('')}<div class="item-head" style="margin-top:8px"><b>Total</b><b class="total">${rupiah(r.total)}</b></div></div>`).join(''):'<div class="card empty">Belum ada transaksi.</div>'}
-function groupBy(keyFn){const m={};filtered().forEach(r=>{const k=keyFn(r);if(!m[k])m[k]={count:0,total:0,items:{}};m[k].count++;m[k].total+=Number(r.total||0);(r.items||[]).forEach(x=>{if(!m[k].items[x.nama])m[k].items[x.nama]={jumlah:0,total:0};m[k].items[x.nama].jumlah+=Number(x.jumlah||0);m[k].items[x.nama].total+=Number(x.subtotal||0)})});return m}
-function renderHari(){const m=groupBy(r=>hariKey(r.waktu));const keys=Object.keys(m).sort().reverse();area.innerHTML=keys.length?keys.map(k=>ringkasanCard(hariLabel(k),m[k])).join(''):'<div class="card empty">Belum ada laporan harian.</div>'}
-function renderBulan(){const m=groupBy(r=>bulanKey(r.waktu));const keys=Object.keys(m).sort().reverse();area.innerHTML=keys.length?keys.map(k=>ringkasanCard(bulanLabel(k),m[k])).join(''):'<div class="card empty">Belum ada laporan bulanan.</div>'}
-function ringkasanCard(label,d){return `<div class="item-card"><div class="item-head"><div><div class="item-title">${label}</div><div class="muted small">${d.count} transaksi</div></div><div class="total">${rupiah(d.total)}</div></div><hr style="border:0;border-top:1px solid #e2e8f0">${Object.entries(d.items).map(([n,x])=>`<div class="item-head small"><span>${n} x${x.jumlah}</span><b>${rupiah(x.total)}</b></div>`).join('')}</div>`}
-async function hapus(id){if(!confirm('Hapus transaksi ini?'))return;await deleteReport(id);reports=await getReports();render()}
-async function hapusSemua(){if(!confirm('Yakin hapus semua laporan?'))return;await clearReports();reports=[];render()}
-</script></body></html>
+<div class="report-tabs">
+<button id="b_transaksi" class="green" onclick="setMode('transaksi')">Transaksi</button>
+<button id="b_hari" class="ghost" onclick="setMode('hari')">Hari</button>
+<button id="b_bulan" class="ghost" onclick="setMode('bulan')">Bulan</button>
+</div>
+<div class="card">
+ <div class="actions2">
+  <button class="soft" onclick="load()">Refresh</button>
+  <button class="red" onclick="hapusSemua()">Hapus Semua</button>
+ </div>
+</div>
+<div id="hasil"></div>
+</main>
+<div id="nav"></div>
+<script src="db.js"></script>
+<script>
+let mode='transaksi', reports=[];
+window.onload=async()=>{document.getElementById('nav').innerHTML=nav('laporan');await load()}
+function setMode(m){mode=m;['transaksi','hari','bulan'].forEach(x=>{document.getElementById('b_'+x).className=x===m?'green':'ghost'});render()}
+async function load(){reports=await getReports();render()}
+function render(){
+ if(mode==='transaksi') renderTransaksi();
+ if(mode==='hari') renderHari();
+ if(mode==='bulan') renderBulan();
+}
+function renderTransaksi(){
+ if(!reports.length){hasil.innerHTML='<div class="card">Belum ada transaksi.</div>';return}
+ hasil.innerHTML=reports.map(r=>`
+ <div class="card report-card">
+  <div class="section-title" style="margin-top:0"><b>${formatWaktu(r.waktuLengkap||r.createdAt)}</b><span class="pill">${r.tanggal||'-'}</span></div>
+  ${(r.semua||[]).map(x=>`<div class="item-line"><span>${x.nama} x${x.jumlah}</span><b>${rupiah(x.subtotal)}</b></div>`).join('') || '<div class="muted">Tidak ada item</div>'}
+  ${(r.stok||[]).filter(x=>Number(x.sisa||0)>0).length?`<div class="muted" style="margin-top:8px">Stok: ${(r.stok||[]).filter(x=>Number(x.sisa||0)>0).map(x=>`${x.nama} ${x.sisa}`).join(', ')}</div>`:''}
+  ${r.catatan?`<div class="muted">Catatan: ${r.catatan}</div>`:''}
+  <div class="section-title"><span class="pill">Total</span><div class="total">${rupiah(r.total)}</div></div>
+  <button class="red small" onclick="hapus('${r.id}')">Hapus transaksi ini</button>
+ </div>`).join('');
+}
+function groupBy(keyfn){
+ const m={};
+ reports.forEach(r=>{const k=keyfn(r); if(!m[k])m[k]={count:0,total:0,items:{}}; m[k].count++; m[k].total+=Number(r.total||0); (r.semua||[]).forEach(x=>{if(!m[k].items[x.nama])m[k].items[x.nama]={jumlah:0,total:0};m[k].items[x.nama].jumlah+=Number(x.jumlah||0);m[k].items[x.nama].total+=Number(x.subtotal||0);});});
+ return m;
+}
+function renderHari(){
+ const m=groupBy(r=>r.tanggal || (r.createdAt||'').slice(0,10));
+ const keys=Object.keys(m).sort().reverse();
+ hasil.innerHTML=keys.length?keys.map(k=>`
+ <div class="card report-card">
+  <div class="section-title" style="margin-top:0"><b>${k}</b><span class="pill">${m[k].count} transaksi</span></div>
+  ${Object.entries(m[k].items).map(([n,v])=>`<div class="item-line"><span>${n} x${v.jumlah}</span><b>${rupiah(v.total)}</b></div>`).join('')}
+  <div class="section-title"><span class="pill">Total harian</span><div class="total">${rupiah(m[k].total)}</div></div>
+ </div>`).join(''):'<div class="card">Belum ada data harian.</div>';
+}
+function renderBulan(){
+ const m=groupBy(r=>(r.tanggal || (r.createdAt||'').slice(0,10)).slice(0,7));
+ const keys=Object.keys(m).sort().reverse();
+ hasil.innerHTML=keys.length?keys.map(k=>`
+ <div class="card report-card">
+  <div class="section-title" style="margin-top:0"><b>${k}</b><span class="pill">${m[k].count} transaksi</span></div>
+  ${Object.entries(m[k].items).map(([n,v])=>`<div class="item-line"><span>${n} x${v.jumlah}</span><b>${rupiah(v.total)}</b></div>`).join('')}
+  <div class="section-title"><span class="pill">Total bulanan</span><div class="total">${rupiah(m[k].total)}</div></div>
+ </div>`).join(''):'<div class="card">Belum ada data bulanan.</div>';
+}
+async function hapus(id){if(confirm('Hapus transaksi ini?')){await del('reports',id);await load()}}
+async function hapusSemua(){if(confirm('Hapus semua laporan?')){await clearStore('reports');await load()}}
+</script>
+</body></html>
