@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Input - Bubur Ayam Bandung Akang Hamzah</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="hero">
+  <h1>Input — Kasir Cepat</h1>
+  <p>Bubur Ayam Bandung Akang Hamzah</p>
+</header>
+
+<main class="wrap">
+  <div class="card kasir-card">
+    <div class="row">
+      <input type="date" id="tanggal">
+      <input id="catatan" placeholder="Catatan singkat">
+    </div>
+    <div class="section-title" style="margin-top:10px">
+      <span class="pill">Mode cepat</span>
+      <div class="total" id="total">Rp 0</div>
+    </div>
+  </div>
+
+  <div id="area"></div>
+
+  <div class="card kasir-card">
+    <div class="mini-actions">
+      <button class="green" onclick="simpanLaporan()">Simpan</button>
+      <button class="soft" onclick="kirim()">WA</button>
+      <button class="ghost" onclick="resetQty()">Reset</button>
+    </div>
+  </div>
+</main>
+
+<div id="nav"></div>
+<script src="db.js"></script>
+<script>
+let S;
+let currentTab = 'produk';
+let qty = { produk: [], extra: [], minuman: [] };
+let stokValue = [];
+
+window.onload = async () => {
+  S = await getSettings();
+  tanggal.value = today();
+  document.getElementById('nav').innerHTML = nav('input');
+  initQty();
+  render();
+};
+
+function initQty(){
+  ['produk','extra','minuman'].forEach(k=>{ qty[k] = activeItems(S,k).map(()=>0); });
+  stokValue = (S.stok || []).map(()=>0);
+}
+function saveStokTemp(){
+  (S.stok || []).forEach((n,i)=>{ const el = document.getElementById(`stok_${i}`); if(el) stokValue[i] = Number(el.value || 0); });
+}
+function render(){
+  saveStokTemp();
+  const tabs = [{id:'produk', nama:'Bubur'},{id:'extra', nama:'Extra'},{id:'minuman', nama:'Minum'},{id:'stok', nama:'Stok'}];
+  const activeName = tabs.find(t=>t.id===currentTab)?.nama || 'Menu';
+  area.innerHTML = `
+    <div class="tab-wrap">
+      ${tabs.map(t=>`<button class="${currentTab===t.id?'green':'ghost'}" onclick="gantiTab('${t.id}')">${t.nama}</button>`).join('')}
+    </div>
+    <div class="card kasir-card">
+      <div class="compact-title">
+        <h2>${activeName}</h2>
+        <span class="pill">${currentTab === 'stok' ? 'Sisa barang' : 'Tap tambah qty'}</span>
+      </div>
+      ${currentTab === 'stok'
+        ? `<div class="stok-grid">${(S.stok||[]).map((n,i)=>`<label>${n}<input id="stok_${i}" type="number" placeholder="Sisa" value="${stokValue[i] || ''}" oninput="stokValue[${i}]=Number(this.value||0)"></label>`).join('')}</div>`
+        : `<div class="menu-grid">${activeItems(S,currentTab).map((x,i)=>`
+          <button class="ghost menu-btn" onclick="add('${currentTab}',${i})">
+            <div><b>${x.nama}</b><span class="muted">${rupiah(x.harga)}</span></div>
+            <div class="qty-line"><span class="qty-badge">Qty: <span id="q_${currentTab}_${i}">${qty[currentTab][i] || 0}</span></span><span class="pill">+</span></div>
+          </button>`).join('')}</div>`}
+    </div>`;
+  hitung();
+}
+function gantiTab(x){ saveStokTemp(); currentTab = x; render(); }
+function add(k,i){ qty[k][i] = Number(qty[k][i] || 0) + 1; const el = document.getElementById(`q_${k}_${i}`); if(el) el.textContent = qty[k][i]; hitung(); }
+function resetQty(){ ['produk','extra','minuman'].forEach(k=>{ qty[k] = qty[k].map(()=>0); }); render(); hitung(); }
+function kumpul(){
+  saveStokTemp();
+  let data = { tanggal: tanggal.value, catatan: catatan.value, konsep: 'Kasir Cepat' };
+  ['produk','extra','minuman'].forEach(k=>{ data[k] = activeItems(S,k).map((x,i)=>({...x, jumlah: Number(qty[k][i] || 0)})); });
+  data.stok = (S.stok||[]).map((n,i)=>({ nama: n, sisa: Number(stokValue[i] || 0) }));
+  return calcReport(data);
+}
+function hitung(){ total.innerText = rupiah(kumpul().total); }
+async function simpanLaporan(){
+  await saveReport(kumpul());
+  ['produk','extra','minuman'].forEach(k=>{ qty[k] = qty[k].map(()=>0); });
+  stokValue = stokValue.map(()=>0);
+  catatan.value = '';
+  render();
+  alert('Tersimpan');
+}
+function kirim(){ openWA(kumpul(),S); }
+</script>
+</body>
+</html>

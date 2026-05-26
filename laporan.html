@@ -1,72 +1,16 @@
-<!DOCTYPE html>
-<html lang="id">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan</title><link rel="stylesheet" href="style.css"></head>
-<body>
-<header class="hero"><h1>Laporan</h1><p>Per transaksi, per hari, dan per bulan.</p></header>
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan - Bubur Ayam Bandung Akang Hamzah</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="hero"><h1>Laporan</h1><p>Harian dan bulanan dari IndexedDB</p></header>
 <main class="wrap">
-<div class="report-tabs">
-<button id="b_transaksi" class="green" onclick="setMode('transaksi')">Transaksi</button>
-<button id="b_hari" class="ghost" onclick="setMode('hari')">Hari</button>
-<button id="b_bulan" class="ghost" onclick="setMode('bulan')">Bulan</button>
-</div>
-<div class="card">
- <div class="actions2">
-  <button class="soft" onclick="load()">Refresh</button>
-  <button class="red" onclick="hapusSemua()">Hapus Semua</button>
- </div>
-</div>
-<div id="hasil"></div>
-</main>
-<div id="nav"></div>
-<script src="db.js"></script>
-<script>
-let mode='transaksi', reports=[];
-window.onload=async()=>{document.getElementById('nav').innerHTML=nav('laporan');await load()}
-function setMode(m){mode=m;['transaksi','hari','bulan'].forEach(x=>{document.getElementById('b_'+x).className=x===m?'green':'ghost'});render()}
-async function load(){reports=await getReports();render()}
-function render(){
- if(mode==='transaksi') renderTransaksi();
- if(mode==='hari') renderHari();
- if(mode==='bulan') renderBulan();
+<section class="panel"><div class="grid3"><label>Dari<input type="date" id="from"></label><label>Sampai<input type="date" id="to"></label><button class="primary" onclick="renderReports()">Tampilkan</button></div></section>
+<section id="summary" class="dash"></section>
+<section id="list"></section>
+</main><div id="nav"></div><script src="db.js"></script><script>
+window.onload=()=>{document.getElementById('nav').innerHTML=nav('laporan'); from.value=today().slice(0,8)+'01'; to.value=today(); renderReports();}
+async function renderReports(){
+  const all=(await getAllReports()).filter(r=>r.tanggal>=from.value&&r.tanggal<=to.value);
+  const total=all.reduce((a,b)=>a+Number(b.total||0),0);
+  summary.innerHTML=`<div><span>Total Range</span><b>${rupiah(total)}</b></div><div><span>Jumlah Transaksi</span><b>${all.length}</b></div><div><span>Rata-rata</span><b>${rupiah(all.length?total/all.length:0)}</b></div>`;
+  list.innerHTML=all.map(r=>`<article class="panel"><div class="catHead"><h2>${r.tanggal}</h2><b>${rupiah(r.total)}</b></div>${['produk','extra','minuman'].map(k=>`<details open><summary><b>${k==='produk'?'Bubur':k==='extra'?'Extra':'Minuman'}</b></summary><table><tbody>${(r[k]||[]).filter(i=>Number(i.jumlah)>0).map(i=>`<tr><td>${i.nama} x ${i.jumlah}</td><td>${rupiah(i.jumlah*i.harga)}</td></tr>`).join('')||'<tr><td colspan="2">Tidak ada data</td></tr>'}</tbody></table></details>`).join('')}${r.catatan?`<p class="muted">Catatan: ${r.catatan}</p>`:''}<button class="danger" onclick="del('${r.id}')">Hapus</button></article>`).join('')||'<div class="panel">Belum ada data pada tanggal ini.</div>';
 }
-function renderTransaksi(){
- if(!reports.length){hasil.innerHTML='<div class="card">Belum ada transaksi.</div>';return}
- hasil.innerHTML=reports.map(r=>`
- <div class="card report-card">
-  <div class="section-title" style="margin-top:0"><b>${formatWaktu(r.waktuLengkap||r.createdAt)}</b><span class="pill">${r.tanggal||'-'}</span></div>
-  ${(r.semua||[]).map(x=>`<div class="item-line"><span>${x.nama} x${x.jumlah}</span><b>${rupiah(x.subtotal)}</b></div>`).join('') || '<div class="muted">Tidak ada item</div>'}
-  ${(r.stok||[]).filter(x=>Number(x.sisa||0)>0).length?`<div class="muted" style="margin-top:8px">Stok: ${(r.stok||[]).filter(x=>Number(x.sisa||0)>0).map(x=>`${x.nama} ${x.sisa}`).join(', ')}</div>`:''}
-  ${r.catatan?`<div class="muted">Catatan: ${r.catatan}</div>`:''}
-  <div class="section-title"><span class="pill">Total</span><div class="total">${rupiah(r.total)}</div></div>
-  <button class="red small" onclick="hapus('${r.id}')">Hapus transaksi ini</button>
- </div>`).join('');
-}
-function groupBy(keyfn){
- const m={};
- reports.forEach(r=>{const k=keyfn(r); if(!m[k])m[k]={count:0,total:0,items:{}}; m[k].count++; m[k].total+=Number(r.total||0); (r.semua||[]).forEach(x=>{if(!m[k].items[x.nama])m[k].items[x.nama]={jumlah:0,total:0};m[k].items[x.nama].jumlah+=Number(x.jumlah||0);m[k].items[x.nama].total+=Number(x.subtotal||0);});});
- return m;
-}
-function renderHari(){
- const m=groupBy(r=>r.tanggal || (r.createdAt||'').slice(0,10));
- const keys=Object.keys(m).sort().reverse();
- hasil.innerHTML=keys.length?keys.map(k=>`
- <div class="card report-card">
-  <div class="section-title" style="margin-top:0"><b>${k}</b><span class="pill">${m[k].count} transaksi</span></div>
-  ${Object.entries(m[k].items).map(([n,v])=>`<div class="item-line"><span>${n} x${v.jumlah}</span><b>${rupiah(v.total)}</b></div>`).join('')}
-  <div class="section-title"><span class="pill">Total harian</span><div class="total">${rupiah(m[k].total)}</div></div>
- </div>`).join(''):'<div class="card">Belum ada data harian.</div>';
-}
-function renderBulan(){
- const m=groupBy(r=>(r.tanggal || (r.createdAt||'').slice(0,10)).slice(0,7));
- const keys=Object.keys(m).sort().reverse();
- hasil.innerHTML=keys.length?keys.map(k=>`
- <div class="card report-card">
-  <div class="section-title" style="margin-top:0"><b>${k}</b><span class="pill">${m[k].count} transaksi</span></div>
-  ${Object.entries(m[k].items).map(([n,v])=>`<div class="item-line"><span>${n} x${v.jumlah}</span><b>${rupiah(v.total)}</b></div>`).join('')}
-  <div class="section-title"><span class="pill">Total bulanan</span><div class="total">${rupiah(m[k].total)}</div></div>
- </div>`).join(''):'<div class="card">Belum ada data bulanan.</div>';
-}
-async function hapus(id){if(confirm('Hapus transaksi ini?')){await del('reports',id);await load()}}
-async function hapusSemua(){if(confirm('Hapus semua laporan?')){await clearStore('reports');await load()}}
-</script>
-</body></html>
+async function del(id){if(confirm('Hapus laporan ini?')){await deleteReport(id);renderReports()}}
+</script></body></html>
