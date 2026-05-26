@@ -1,16 +1,311 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan - Bubur Ayam Bandung Akang Hamzah</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="hero"><h1>Laporan</h1><p>Harian dan bulanan dari IndexedDB</p></header>
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laporan - Bubur Ayam Bandung Akang Hamzah</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.tabs button{background:white;border:1px solid var(--line);color:var(--navy)}
+.tabs button.active{background:var(--blue);color:white}
+.actionRow{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}
+.smallBtn{padding:10px;border-radius:13px;font-weight:800}
+.whatsapp{background:#16a34a;color:white}
+.export{background:#2563eb;color:white}
+.print{background:#7c3aed;color:white}
+.panel table{width:100%;border-collapse:collapse;margin-top:8px}
+.panel td,.panel th{padding:9px;border-bottom:1px solid var(--line);text-align:left}
+.panel td:last-child,.panel th:last-child{text-align:right}
+.modeTitle{font-size:18px;font-weight:900;margin:14px 0 8px}
+</style>
+</head>
+
+<body>
+<header class="hero">
+  <h1>Laporan</h1>
+  <p>Per transaksi, harian, dan bulanan dari IndexedDB</p>
+</header>
+
 <main class="wrap">
-<section class="panel"><div class="grid3"><label>Dari<input type="date" id="from"></label><label>Sampai<input type="date" id="to"></label><button class="primary" onclick="renderReports()">Tampilkan</button></div></section>
+
+<section class="panel">
+  <div class="grid3">
+    <label>Dari<input type="date" id="from"></label>
+    <label>Sampai<input type="date" id="to"></label>
+    <button class="primary" onclick="renderReports()">Tampilkan</button>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="tabs">
+    <button id="tabTransaksi" onclick="setMode('transaksi')">Transaksi</button>
+    <button id="tabHarian" onclick="setMode('harian')">Harian</button>
+    <button id="tabBulanan" onclick="setMode('bulanan')">Bulanan</button>
+  </div>
+
+  <div class="actionRow">
+    <button class="smallBtn whatsapp" onclick="kirimWA()">Kirim WA</button>
+    <button class="smallBtn print" onclick="exportPDF()">Export PDF</button>
+    <button class="smallBtn export" onclick="exportCSV()">Export Spreadsheet</button>
+    <button class="smallBtn whatsapp" onclick="exportCSVWA()">Spreadsheet + WA</button>
+  </div>
+</section>
+
 <section id="summary" class="dash"></section>
 <section id="list"></section>
-</main><div id="nav"></div><script src="db.js"></script><script>
-window.onload=()=>{document.getElementById('nav').innerHTML=nav('laporan'); from.value=today().slice(0,8)+'01'; to.value=today(); renderReports();}
-async function renderReports(){
-  const all=(await getAllReports()).filter(r=>r.tanggal>=from.value&&r.tanggal<=to.value);
-  const total=all.reduce((a,b)=>a+Number(b.total||0),0);
-  summary.innerHTML=`<div><span>Total Range</span><b>${rupiah(total)}</b></div><div><span>Jumlah Transaksi</span><b>${all.length}</b></div><div><span>Rata-rata</span><b>${rupiah(all.length?total/all.length:0)}</b></div>`;
-  list.innerHTML=all.map(r=>`<article class="panel"><div class="catHead"><h2>${r.tanggal}</h2><b>${rupiah(r.total)}</b></div>${['produk','extra','minuman'].map(k=>`<details open><summary><b>${k==='produk'?'Bubur':k==='extra'?'Extra':'Minuman'}</b></summary><table><tbody>${(r[k]||[]).filter(i=>Number(i.jumlah)>0).map(i=>`<tr><td>${i.nama} x ${i.jumlah}</td><td>${rupiah(i.jumlah*i.harga)}</td></tr>`).join('')||'<tr><td colspan="2">Tidak ada data</td></tr>'}</tbody></table></details>`).join('')}${r.catatan?`<p class="muted">Catatan: ${r.catatan}</p>`:''}<button class="danger" onclick="del('${r.id}')">Hapus</button></article>`).join('')||'<div class="panel">Belum ada data pada tanggal ini.</div>';
+
+</main>
+
+<div id="nav"></div>
+
+<script src="db.js"></script>
+<script>
+let mode='transaksi';
+let currentData=[];
+
+window.onload=()=>{
+  document.getElementById('nav').innerHTML=nav('laporan');
+  from.value=today().slice(0,8)+'01';
+  to.value=today();
+  setMode('transaksi');
+};
+
+function setMode(m){
+  mode=m;
+  tabTransaksi.classList.toggle('active',m==='transaksi');
+  tabHarian.classList.toggle('active',m==='harian');
+  tabBulanan.classList.toggle('active',m==='bulanan');
+  renderReports();
 }
-async function del(id){if(confirm('Hapus laporan ini?')){await deleteReport(id);renderReports()}}
-</script></body></html>
+
+async function renderReports(){
+  const all=(await getAllReports())
+    .filter(r=>r.tanggal>=from.value&&r.tanggal<=to.value)
+    .sort((a,b)=>(b.waktu||b.id||'').toString().localeCompare((a.waktu||a.id||'').toString()));
+
+  currentData=all;
+
+  const total=all.reduce((a,b)=>a+Number(b.total||0),0);
+
+  summary.innerHTML=`
+    <div><span>Total Range</span><b>${rupiah(total)}</b></div>
+    <div><span>Jumlah Transaksi</span><b>${all.length}</b></div>
+    <div><span>Rata-rata</span><b>${rupiah(all.length?total/all.length:0)}</b></div>
+  `;
+
+  if(mode==='transaksi') renderTransaksi(all);
+  if(mode==='harian') renderHarian(all);
+  if(mode==='bulanan') renderBulanan(all);
+}
+
+function getItems(r){
+  return [...(r.produk||[]),...(r.extra||[]),...(r.minuman||[])]
+    .filter(i=>Number(i.jumlah)>0)
+    .map(i=>({
+      nama:i.nama,
+      jumlah:Number(i.jumlah||0),
+      harga:Number(i.harga||0),
+      subtotal:Number(i.jumlah||0)*Number(i.harga||0)
+    }));
+}
+
+function renderTransaksi(all){
+  list.innerHTML=`<div class="modeTitle">Laporan Per Transaksi</div>`+
+  (all.map(r=>`
+    <article class="panel">
+      <div class="catHead">
+        <h2>${r.tanggal}</h2>
+        <b>${rupiah(r.total)}</b>
+      </div>
+
+      <table>
+        <tbody>
+          ${getItems(r).map(i=>`
+            <tr>
+              <td>${i.nama} x ${i.jumlah}</td>
+              <td>${rupiah(i.subtotal)}</td>
+            </tr>
+          `).join('') || '<tr><td colspan="2">Tidak ada data</td></tr>'}
+        </tbody>
+      </table>
+
+      ${r.catatan?`<p class="muted">Catatan: ${r.catatan}</p>`:''}
+
+      <div class="actionRow">
+        <button class="whatsapp smallBtn" onclick="kirimWATransaksi('${r.id}')">WA Transaksi</button>
+        <button class="danger smallBtn" onclick="del('${r.id}')">Hapus</button>
+      </div>
+    </article>
+  `).join('') || '<div class="panel">Belum ada data pada tanggal ini.</div>');
+}
+
+function renderHarian(all){
+  const map={};
+
+  all.forEach(r=>{
+    if(!map[r.tanggal]) map[r.tanggal]={tanggal:r.tanggal,total:0,jumlah:0,items:{}};
+    map[r.tanggal].total+=Number(r.total||0);
+    map[r.tanggal].jumlah++;
+
+    getItems(r).forEach(i=>{
+      if(!map[r.tanggal].items[i.nama]) map[r.tanggal].items[i.nama]={nama:i.nama,jumlah:0,total:0};
+      map[r.tanggal].items[i.nama].jumlah+=i.jumlah;
+      map[r.tanggal].items[i.nama].total+=i.subtotal;
+    });
+  });
+
+  const arr=Object.values(map).sort((a,b)=>b.tanggal.localeCompare(a.tanggal));
+
+  list.innerHTML=`<div class="modeTitle">Laporan Harian</div>`+
+  (arr.map(d=>`
+    <article class="panel">
+      <div class="catHead">
+        <h2>${d.tanggal}</h2>
+        <b>${rupiah(d.total)}</b>
+      </div>
+      <p class="muted">${d.jumlah} transaksi</p>
+      <table>
+        <thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
+        <tbody>
+          ${Object.values(d.items).map(i=>`
+            <tr>
+              <td>${i.nama}</td>
+              <td>${i.jumlah}</td>
+              <td>${rupiah(i.total)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </article>
+  `).join('') || '<div class="panel">Belum ada data harian.</div>');
+}
+
+function renderBulanan(all){
+  const map={};
+
+  all.forEach(r=>{
+    const bulan=r.tanggal.slice(0,7);
+    if(!map[bulan]) map[bulan]={bulan,total:0,jumlah:0,items:{}};
+    map[bulan].total+=Number(r.total||0);
+    map[bulan].jumlah++;
+
+    getItems(r).forEach(i=>{
+      if(!map[bulan].items[i.nama]) map[bulan].items[i.nama]={nama:i.nama,jumlah:0,total:0};
+      map[bulan].items[i.nama].jumlah+=i.jumlah;
+      map[bulan].items[i.nama].total+=i.subtotal;
+    });
+  });
+
+  const arr=Object.values(map).sort((a,b)=>b.bulan.localeCompare(a.bulan));
+
+  list.innerHTML=`<div class="modeTitle">Laporan Bulanan</div>`+
+  (arr.map(d=>`
+    <article class="panel">
+      <div class="catHead">
+        <h2>${d.bulan}</h2>
+        <b>${rupiah(d.total)}</b>
+      </div>
+      <p class="muted">${d.jumlah} transaksi</p>
+      <table>
+        <thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
+        <tbody>
+          ${Object.values(d.items).map(i=>`
+            <tr>
+              <td>${i.nama}</td>
+              <td>${i.jumlah}</td>
+              <td>${rupiah(i.total)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </article>
+  `).join('') || '<div class="panel">Belum ada data bulanan.</div>');
+}
+
+async function del(id){
+  if(confirm('Hapus laporan ini?')){
+    await deleteReport(id);
+    renderReports();
+  }
+}
+
+function textLaporan(){
+  const total=currentData.reduce((a,b)=>a+Number(b.total||0),0);
+  return `Laporan Bubur Ayam Bandung Akang Hamzah
+Mode: ${mode}
+Periode: ${from.value} sampai ${to.value}
+Jumlah transaksi: ${currentData.length}
+Total: ${rupiah(total)}`;
+}
+
+function kirimWA(){
+  window.open('https://wa.me/?text='+encodeURIComponent(textLaporan()),'_blank');
+}
+
+function kirimWATransaksi(id){
+  const r=currentData.find(x=>String(x.id)===String(id));
+  if(!r)return;
+  const items=getItems(r).map(i=>`- ${i.nama} x ${i.jumlah} = ${rupiah(i.subtotal)}`).join('\n');
+  const teks=`Transaksi Bubur Ayam Bandung Akang Hamzah
+Tanggal: ${r.tanggal}
+${items}
+
+Total: ${rupiah(r.total)}
+${r.catatan?'Catatan: '+r.catatan:''}`;
+  window.open('https://wa.me/?text='+encodeURIComponent(teks),'_blank');
+}
+
+function exportPDF(){
+  const html=`
+  <html><head><title>Laporan PDF</title>
+  <style>
+  body{font-family:Arial;padding:20px;color:#111}
+  h1{margin-bottom:4px}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  td,th{border:1px solid #ccc;padding:8px;text-align:left}
+  td:last-child,th:last-child{text-align:right}
+  </style></head><body>
+  <h1>Laporan Bubur Ayam Bandung Akang Hamzah</h1>
+  <p>Mode: ${mode}<br>Periode: ${from.value} sampai ${to.value}</p>
+  ${document.getElementById('summary').innerHTML}
+  ${document.getElementById('list').innerHTML}
+  <script>window.print()<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+function exportCSV(){
+  let rows=[['Tanggal','Mode','Item','Qty','Harga','Subtotal','Total Transaksi','Catatan']];
+
+  currentData.forEach(r=>{
+    const items=getItems(r);
+    if(items.length===0){
+      rows.push([r.tanggal,mode,'-',0,0,0,r.total||0,r.catatan||'']);
+    }else{
+      items.forEach(i=>{
+        rows.push([r.tanggal,mode,i.nama,i.jumlah,i.harga,i.subtotal,r.total||0,r.catatan||'']);
+      });
+    }
+  });
+
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`laporan-${mode}-${from.value}-sd-${to.value}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportCSVWA(){
+  exportCSV();
+  setTimeout(()=>kirimWA(),500);
+}
+</script>
+</body>
+</html>
