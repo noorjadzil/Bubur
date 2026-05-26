@@ -33,3 +33,8 @@ button{border:0;border-radius:16px;padding:12px 14px;font-weight:900;cursor:poin
 table{width:100%;border-collapse:separate;border-spacing:0 8px}td{background:white;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:9px}td:first-child{border-left:1px solid var(--line);border-radius:14px 0 0 14px}td:last-child{border-right:1px solid var(--line);border-radius:0 14px 14px 0;text-align:right}
 .grid3{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}.setrow{display:grid;grid-template-columns:40px 40px 1fr 95px 70px;gap:7px;margin:7px 0;align-items:center}
 @media(max-width:600px){.hero h1{font-size:20px}.wrap{padding:10px}.card,.panel{border-radius:20px}.row,.grid3{grid-template-columns:1fr;display:grid}.setrow{grid-template-columns:34px 34px 1fr}.setrow input[type=number],.setrow .danger{grid-column:auto}.menu-btn{min-height:78px;padding:8px!important}.menu-btn b{font-size:12px}.tab-wrap button{font-size:11px;padding:8px 3px}}
+
+.blue{
+  background:#2563eb;
+  color:white;
+}
