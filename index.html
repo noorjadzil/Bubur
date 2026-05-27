@@ -130,7 +130,8 @@ button{
   <section class="card">
     <div class="grid">
       <label>Tanggal
-        <input type="date" id="tanggal">
+        <input type="date" id="tanggal" onchange="updateHari()">
+        <div class="pill" id="hariBox" style="margin-top:8px;text-align:center">-</div>
       </label>
       <label>Operator
         <select id="operator" onchange="setOperatorBadge()"></select>
@@ -172,6 +173,12 @@ const DEFAULT_THEME={brand:'Bubur Ayam Bandung Akang Hamzah',bg:'#f4f7fb',card:'
 const DEFAULT_OPERATORS=['Akang Hamzah','Operator 1','Operator 2'];
 
 function today(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}
+
+function namaHari(tgl){
+  const hari=['Ahad','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'];
+  return hari[new Date(tgl).getDay()]||'';
+}
+
 function rp(n){return 'Rp '+Number(n||0).toLocaleString('id-ID')}
 function clone(o){return JSON.parse(JSON.stringify(o))}
 function safeJSON(key,def){try{return JSON.parse(localStorage.getItem(key)||'null')||def}catch(e){return def}}
@@ -209,6 +216,7 @@ tanggal.value=today();
 navbox.innerHTML=nav('input');
 applyTheme();
 renderOperator();
+updateHari();
 
 function label(k,fallback){return (items.labels&&items.labels[k])||fallback}
 function renderOperator(){
@@ -216,6 +224,9 @@ function renderOperator(){
   operator.innerHTML=ops.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
   operator.value=localStorage.getItem('last_operator')||ops[0]||'';
   setOperatorBadge();
+}
+function updateHari(){
+  hariBox.textContent=namaHari(tanggal.value);
 }
 function setOperatorBadge(){
   localStorage.setItem('last_operator',operator.value||'');
@@ -330,7 +341,7 @@ function simpan(noAlert=false){
   arr.push(d);
   localStorage.setItem(key,JSON.stringify(arr));
   if(!noAlert)alert('Tersimpan');
-  resetForm();
+  resetForm();updateHari();
 }
 function resetForm(){
   document.querySelectorAll('input[type=number]:not([readonly])').forEach(x=>{x.value='0';markZero(x)});
