@@ -5,6 +5,7 @@ let settings, draft = {produk:[], extra:[], minuman:[], stok:[], kurang:[]};
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 
 async function startHome(){
+  await migrateOldLocalStorageToIndexedDB();
   settings = await getSettings();
   brandTitle.textContent = settings.brand.replace('Bubur Ayam Bandung ', '') || 'Akang Hamzah';
   const all = await getAllReports();
@@ -16,6 +17,7 @@ async function startHome(){
 }
 
 async function startInput(){
+  await migrateOldLocalStorageToIndexedDB();
   settings = await getSettings();
   tanggal.value = today();
   buildInput();
@@ -50,7 +52,7 @@ function changeQty(cat,i,step){
   calcTotal();
 }
 function calcStock(i){
-  stokS_${i}.textContent = Number(document.getElementById(`stokA_${i}`).value||0) - Number(document.getElementById(`stokL_${i}`).value||0);
+  document.getElementById(`stokS_${i}`).textContent = Number(document.getElementById(`stokA_${i}`).value||0) - Number(document.getElementById(`stokL_${i}`).value||0);
 }
 function collectCat(cat){
   return settings.menu[cat].map((item,i)=>{
@@ -110,6 +112,7 @@ function resetForm(keepDate=true){
 }
 
 async function startReports(){
+  await migrateOldLocalStorageToIndexedDB();
   fromDate.value = today().slice(0,8)+'01'; toDate.value = today(); renderReports();
 }
 async function renderReports(){

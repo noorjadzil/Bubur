@@ -1,4 +1,4 @@
-const CACHE = 'akang-hamzah-premium-v1';
+const CACHE = 'akang-hamzah-premium-v2-aman-data';
 const FILES = ['index.html','input.html','laporan.html','setting.html','style.css','app.js','db.js','manifest.json'];
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))));
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));

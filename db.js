@@ -99,3 +99,51 @@ async function getAllReports(){
 async function deleteReport(tanggal){
   return tx(STORE_REPORTS,'readwrite',s=>s.delete(tanggal));
 }
+
+
+function normalizeOldReport(data){
+  if(!data || !data.tanggal) return null;
+  const fixItems = arr => (arr || []).map(x => ({
+    nama: x.nama || '',
+    harga: Number(x.harga || 0),
+    jumlah: Number(x.jumlah || 0),
+    total: Number(x.total || (Number(x.jumlah || 0) * Number(x.harga || 0)))
+  }));
+  const fixStok = arr => (arr || []).map(x => {
+    const awal = Number(x.awal ?? x.stokAwal ?? 0);
+    const laku = Number(x.laku ?? x.stokLaku ?? 0);
+    return { nama: x.nama || '', awal, laku, sisa: Number(x.sisa ?? (awal - laku)) };
+  });
+  const fixKurang = arr => (arr || []).map(x => ({ nama: x.nama || '', kurang: !!x.kurang, cukup: !!x.cukup }));
+  const produk = fixItems(data.produk);
+  const extra = fixItems(data.extra);
+  const minuman = fixItems(data.minuman);
+  const total = Number(data.total || [...produk, ...extra, ...minuman].reduce((a,b)=>a+b.total,0));
+  return {
+    tanggal: data.tanggal,
+    catatan: data.catatan || '',
+    produk,
+    extra,
+    minuman,
+    stok: fixStok(data.stok),
+    kurang: fixKurang(data.kurang),
+    total,
+    updatedAt: data.updatedAt || new Date().toISOString(),
+    migratedFrom: 'localStorage_laporan'
+  };
+}
+
+async function migrateOldLocalStorageToIndexedDB(){
+  const keys = Object.keys(localStorage).filter(k => k.startsWith('laporan_'));
+  let moved = 0;
+  for(const key of keys){
+    try{
+      const oldData = JSON.parse(localStorage.getItem(key) || 'null');
+      const data = normalizeOldReport(oldData);
+      if(!data) continue;
+      const existing = await getReportData(data.tanggal);
+      if(!existing){ await saveReportData(data); moved++; }
+    }catch(e){ console.warn('Gagal migrasi data lama:', key, e); }
+  }
+  return moved;
+}
