@@ -1,25 +1,147 @@
-let CFG,CONCEPT=2;
-const conceptName={2:'Dashboard Stepper',3:'Kasir Cepat',4:'Spreadsheet',5:'Premium Wizard'};
-function start(active,no){CONCEPT=no;document.body.insertAdjacentHTML('beforeend',nav(active,no));}
-async function initInput(no){start('input',no);CFG=await getSettings();app.innerHTML=header('Input '+no+' — '+conceptName[no],'Data tersimpan offline di IndexedDB')+`<main class="wrap v${no}">
-<section class="panel"><div class="grid2"><label>Tanggal<input type="date" id="tanggal" value="${today()}"></label><label>Petugas<input id="petugas" placeholder="Opsional"></label></div><label>Catatan<textarea id="catatan" placeholder="Catatan tambahan..."></textarea></label></section>
-<section id="forms"></section>
-<section class="stickyTotal"><div><span>Total</span><b id="grand">Rp 0</b></div><button class="green" onclick="submitReport()">Simpan</button><button class="soft" onclick="sendWA()">WA</button></section>
-</main>`;renderInputForms();calcAll();}
-function renderInputForms(){forms.innerHTML='';CFG.categories.forEach(cat=>{let html=`<section class="panel"><div class="catHead"><h2>${cat.name}</h2><span>${cat.type==='sale'?'penjualan':cat.type==='stock'?'stok':'checklist'}</span></div>`;if(cat.type==='sale'){let cls=CONCEPT==2?'cards':CONCEPT==3?'bigbuttons':CONCEPT==4?'tablelike':'compact';html+=`<div class="items ${cls}">`+cat.items.map((it,i)=>`<div class="item-row"><div><b>${it[0]}</b><br><small class="muted">${rupiah(it[1])}</small></div><div class="qty"><button class="ghost" onclick="step('${cat.id}_${i}',-1)">−</button><input id="${cat.id}_${i}" data-price="${it[1]}" data-name="${it[0]}" data-cat="${cat.id}" type="number" min="0" value="0" oninput="calcAll()"><button class="ghost" onclick="step('${cat.id}_${i}',1)">+</button></div><strong id="t_${cat.id}_${i}">Rp 0</strong></div>`).join('')+`</div>`}
-else if(cat.type==='stock'){html+=`<div class="items compact">`+cat.items.map((it,i)=>`<div class="item-row"><b>${it[0]}</b><input id="${cat.id}_awal_${i}" type="number" placeholder="Awal" oninput="calcAll()"><input id="${cat.id}_sisa_${i}" type="number" placeholder="Sisa" oninput="calcAll()"></div>`).join('')+`</div>`}
-else{html+=`<div class="checks">`+cat.items.map((it,i)=>`<label><input type="checkbox" id="${cat.id}_${i}"> ${it[0]}</label>`).join('')+`</div>`}html+=`</section>`;forms.insertAdjacentHTML('beforeend',html)})}
-function step(id,d){const el=document.getElementById(id);el.value=Math.max(0,num(el.value)+d);calcAll();}
-function calcAll(){let total=0;document.querySelectorAll('[data-price]').forEach(el=>{const sub=num(el.value)*num(el.dataset.price);total+=sub;let t=document.getElementById('t_'+el.id);if(t)t.textContent=rupiah(sub)});if(window.grand)grand.textContent=rupiah(total);return total}
-function collectReport(){const data={tanggal:tanggal.value,petugas:petugas.value,catatan:catatan.value,total:calcAll(),konsep:CONCEPT,categories:[]};CFG.categories.forEach(cat=>{const c={id:cat.id,name:cat.name,type:cat.type,items:[]};cat.items.forEach((it,i)=>{if(cat.type==='sale'){let q=num(document.getElementById(`${cat.id}_${i}`).value);c.items.push({nama:it[0],harga:it[1],jumlah:q,total:q*it[1]})}else if(cat.type==='stock'){let awal=num(document.getElementById(`${cat.id}_awal_${i}`).value),sisa=num(document.getElementById(`${cat.id}_sisa_${i}`).value);c.items.push({nama:it[0],awal,sisa,laku:awal-sisa})}else{c.items.push({nama:it[0],kurang:document.getElementById(`${cat.id}_${i}`).checked})}});data.categories.push(c)});return data}
-async function submitReport(){await saveReport(collectReport());document.querySelectorAll('input[type=number]').forEach(x=>x.value=0);document.querySelectorAll('input[type=checkbox]').forEach(x=>x.checked=false);catatan.value='';calcAll();alert('Tersimpan')}
-function waText(d){let s=`*${CFG.brand}*\nTanggal: ${d.tanggal}\nTotal: *${rupiah(d.total)}*\n`;d.categories.forEach(c=>{s+=`\n*${c.name}*\n`;c.items.forEach(i=>{if(i.jumlah>0)s+=`${i.nama} x${i.jumlah} = ${rupiah(i.total)}\n`;if(i.laku>0)s+=`${i.nama}: awal ${i.awal}, sisa ${i.sisa}, laku ${i.laku}\n`;if(i.kurang)s+=`- ${i.nama}\n`})});if(d.catatan)s+=`\nCatatan: ${d.catatan}`;return s}
-function sendWA(){const no=(CFG.wa||'').replace(/\D/g,'');window.open((no?`https://wa.me/${no}?text=`:'https://wa.me/?text=')+encodeURIComponent(waText(collectReport())),'_blank')}
-async function initReport(no){start('laporan',no);app.innerHTML=header('Laporan '+no,'Rekap harian dan bulanan')+`<main class="wrap"><section class="panel"><div class="grid3"><label>Dari<input type="date" id="from"></label><label>Sampai<input type="date" id="to"></label><button class="primary" onclick="renderReports()">Tampilkan</button></div></section><section id="summary" class="dash"></section><section id="list"></section></main>`;from.value=today().slice(0,8)+'01';to.value=today();renderReports()}
-async function renderReports(){const all=(await getAllReports()).filter(r=>r.tanggal>=from.value&&r.tanggal<=to.value);const total=all.reduce((a,b)=>a+num(b.total),0);summary.innerHTML=`<div><span>Total</span><b>${rupiah(total)}</b></div><div><span>Jumlah transaksi</span><b>${all.length}</b></div><div><span>Rata-rata</span><b>${rupiah(all.length?total/all.length:0)}</b></div>`;list.innerHTML=all.map(r=>`<article class="panel"><div class="catHead"><h2>${r.tanggal}</h2><b>${rupiah(r.total)}</b></div>${(r.categories||[]).map(c=>`<details ${c.type==='sale'?'open':''}><summary><b>${c.name}</b></summary><table><tbody>${(c.items||[]).filter(i=>i.jumlah||i.laku||i.kurang).map(i=>`<tr><td>${i.nama}</td><td>${i.jumlah||i.laku||'kurang'}</td><td>${i.total?rupiah(i.total):''}</td></tr>`).join('')||'<tr><td colspan="3">Tidak ada data</td></tr>'}</tbody></table></details>`).join('')}<button class="danger" onclick="delReport('${r.id}')">Hapus</button></article>`).join('')||'<section class="panel">Belum ada data.</section>'}
-async function delReport(id){if(confirm('Hapus laporan ini?')){await deleteReport(id);renderReports()}}
-async function initSetting(no){start('setting',no);CFG=await getSettings();app.innerHTML=header('Setting '+no,'Edit menu, harga, nomor WA, dan urutan')+`<main class="wrap"><section class="panel"><label>Nama brand<input id="brand" value="${CFG.brand||''}"></label><label>Nomor WhatsApp<input id="wa" value="${CFG.wa||''}" placeholder="628xxxx"></label><button class="green" onclick="saveCfg()">Simpan Setting</button><button class="ghost" onclick="addCat()">Tambah Kategori</button></section><section id="setbox"></section></main>`;renderSettingRows()}
-function renderSettingRows(){setbox.innerHTML='';CFG.categories.forEach((c,ci)=>setbox.insertAdjacentHTML('beforeend',`<section class="panel"><div class="grid2"><input value="${c.name}" onchange="CFG.categories[${ci}].name=this.value"><select onchange="CFG.categories[${ci}].type=this.value"><option value="sale" ${c.type==='sale'?'selected':''}>Penjualan</option><option value="stock" ${c.type==='stock'?'selected':''}>Stok</option><option value="check" ${c.type==='check'?'selected':''}>Checklist</option></select></div>${c.items.map((it,i)=>`<div class="setrow"><button class="ghost" onclick="moveItem(${ci},${i},-1)">↑</button><button class="ghost" onclick="moveItem(${ci},${i},1)">↓</button><input value="${it[0]}" onchange="CFG.categories[${ci}].items[${i}][0]=this.value"><input type="number" value="${it[1]}" onchange="CFG.categories[${ci}].items[${i}][1]=num(this.value)"><button class="danger" onclick="CFG.categories[${ci}].items.splice(${i},1);renderSettingRows()">Hapus</button></div>`).join('')}<button class="soft" onclick="CFG.categories[${ci}].items.push(['Item Baru',0]);renderSettingRows()">Tambah Item</button></section>`))}
-function moveItem(ci,i,d){let a=CFG.categories[ci].items,j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];renderSettingRows()}
-function addCat(){CFG.categories.push({id:'cat'+Date.now(),name:'Kategori Baru',type:'sale',items:[['Item Baru',0]]});renderSettingRows()}
-async function saveCfg(){CFG.brand=brand.value;CFG.wa=wa.value;await saveSettings(CFG);alert('Setting tersimpan')}
+const rupiah = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+const today = () => new Date().toISOString().slice(0,10);
+let settings, draft = {produk:[], extra:[], minuman:[], stok:[], kurang:[]};
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+
+async function startHome(){
+  settings = await getSettings();
+  brandTitle.textContent = settings.brand.replace('Bubur Ayam Bandung ', '') || 'Akang Hamzah';
+  const all = await getAllReports();
+  const now = today();
+  const todayData = all.find(x=>x.tanggal===now);
+  todayTotal.textContent = rupiah(todayData?.total || 0);
+  todayItems.textContent = totalQty(todayData || {});
+  latestList.innerHTML = all.slice(0,5).map(r=>rowHTML(r)).join('') || '<p class="small">Belum ada laporan.</p>';
+}
+
+async function startInput(){
+  settings = await getSettings();
+  tanggal.value = today();
+  buildInput();
+  await loadReportToForm();
+  tanggal.addEventListener('change', loadReportToForm);
+  document.querySelectorAll('.segmented button').forEach(btn=>btn.onclick=()=>switchTab(btn.dataset.tab));
+}
+
+function switchTab(id){
+  document.querySelectorAll('.segmented button').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('hidden', p.id!==id));
+}
+
+function buildInput(){
+  ['produk','extra','minuman'].forEach(cat=>{
+    document.getElementById(cat).innerHTML = settings.menu[cat].map((item,i)=>itemHTML(cat,item,i)).join('');
+  });
+  stok.innerHTML = `<div class="card"><h2>Stok Perlengkapan</h2>${settings.menu.stok.map((nama,i)=>stockHTML(nama,i)).join('')}</div>`;
+  kurangBox.innerHTML = settings.menu.kurang.map((nama,i)=>`<label class="chip"><input type="checkbox" id="kurang_${i}">${nama}</label>`).join('');
+}
+
+function itemHTML(cat,item,i){
+  return `<div class="item-card"><div><div class="item-name">${item.nama}</div><div class="item-price">${rupiah(item.harga)}</div></div><div class="counter"><button onclick="changeQty('${cat}',${i},-1)">−</button><input id="${cat}_${i}" type="number" min="0" value="0" oninput="calcTotal()"><button onclick="changeQty('${cat}',${i},1)">+</button></div></div>`;
+}
+function stockHTML(nama,i){
+  return `<div class="item-card"><div><div class="item-name">${nama}</div><div class="item-price">Awal - Laku = Sisa</div></div><div class="counter"><input id="stokA_${i}" type="number" min="0" value="0" oninput="calcStock(${i})"><input id="stokL_${i}" type="number" min="0" value="0" oninput="calcStock(${i})"><strong id="stokS_${i}">0</strong></div></div>`;
+}
+function changeQty(cat,i,step){
+  const el = document.getElementById(`${cat}_${i}`);
+  el.value = Math.max(0, Number(el.value || 0) + step);
+  if(navigator.vibrate) navigator.vibrate(18);
+  calcTotal();
+}
+function calcStock(i){
+  stokS_${i}.textContent = Number(document.getElementById(`stokA_${i}`).value||0) - Number(document.getElementById(`stokL_${i}`).value||0);
+}
+function collectCat(cat){
+  return settings.menu[cat].map((item,i)=>{
+    const jumlah = Number(document.getElementById(`${cat}_${i}`).value || 0);
+    return {...item, jumlah, total: jumlah * item.harga};
+  });
+}
+function collectData(){
+  const produk = collectCat('produk'), extra = collectCat('extra'), minuman = collectCat('minuman');
+  const stokData = settings.menu.stok.map((nama,i)=>{
+    const awal = Number(document.getElementById(`stokA_${i}`).value||0);
+    const laku = Number(document.getElementById(`stokL_${i}`).value||0);
+    return {nama, awal, laku, sisa: awal-laku};
+  });
+  const kurangData = settings.menu.kurang.map((nama,i)=>({nama, kurang: document.getElementById(`kurang_${i}`).checked}));
+  const total = [...produk,...extra,...minuman].reduce((a,b)=>a+b.total,0);
+  return {tanggal:tanggal.value, catatan:catatan.value, produk, extra, minuman, stok:stokData, kurang:kurangData, total, updatedAt:new Date().toISOString()};
+}
+function calcTotal(){ grandTotal.textContent = rupiah(collectData().total); }
+async function saveReport(sendWa){
+  const data = collectData();
+  await saveReportData(data);
+  if(sendWa) kirimWA(data); else alert('Laporan berhasil disimpan');
+  resetForm(false);
+}
+function kirimWA(data){
+  let text = `*LAPORAN PENJUALAN HARIAN*\n${settings.brand}\nTanggal: ${data.tanggal}\n\n`;
+  ['produk','extra','minuman'].forEach(cat=>{
+    text += `*${cat.toUpperCase()}*\n`;
+    const rows = data[cat].filter(x=>x.jumlah>0);
+    text += rows.length ? rows.map(x=>`${x.nama} x${x.jumlah} = ${rupiah(x.total)}`).join('\n')+'\n\n' : '-\n\n';
+  });
+  text += `*STOK*\n` + data.stok.filter(x=>x.awal||x.laku).map(x=>`${x.nama}: awal ${x.awal}, laku ${x.laku}, sisa ${x.sisa}`).join('\n');
+  text += `\n\n*BARANG KURANG*\n` + (data.kurang.filter(x=>x.kurang).map(x=>'- '+x.nama).join('\n') || '-');
+  text += `\n\n*TOTAL: ${rupiah(data.total)}*`;
+  if(data.catatan) text += `\nCatatan: ${data.catatan}`;
+  const phone = (settings.wa || '').replace(/\D/g,'');
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`,'_blank');
+}
+async function loadReportToForm(){
+  const data = await getReportData(tanggal.value);
+  document.querySelectorAll('input[type="number"]').forEach(i=>i.value=0);
+  document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.checked=false);
+  catatan.value = data?.catatan || '';
+  if(data){
+    ['produk','extra','minuman'].forEach(cat=>data[cat]?.forEach((x,i)=>{const el=document.getElementById(`${cat}_${i}`); if(el) el.value=x.jumlah||0;}));
+    data.stok?.forEach((x,i)=>{ if(document.getElementById(`stokA_${i}`)){ document.getElementById(`stokA_${i}`).value=x.awal||0; document.getElementById(`stokL_${i}`).value=x.laku||0; document.getElementById(`stokS_${i}`).textContent=x.sisa||0; }});
+    data.kurang?.forEach((x,i)=>{ if(document.getElementById(`kurang_${i}`)) document.getElementById(`kurang_${i}`).checked=!!x.kurang; });
+  }
+  calcTotal();
+}
+function resetForm(keepDate=true){
+  const d = tanggal.value;
+  document.querySelectorAll('input[type="number"]').forEach(i=>i.value=0);
+  document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.checked=false);
+  catatan.value=''; if(keepDate) tanggal.value=d; calcTotal();
+}
+
+async function startReports(){
+  fromDate.value = today().slice(0,8)+'01'; toDate.value = today(); renderReports();
+}
+async function renderReports(){
+  const all = (await getAllReports()).filter(r=>r.tanggal>=fromDate.value && r.tanggal<=toDate.value);
+  sumTotal.textContent = rupiah(all.reduce((a,b)=>a+b.total,0));
+  sumQty.textContent = all.reduce((a,b)=>a+totalQty(b),0);
+  sumDays.textContent = all.length;
+  reportList.innerHTML = all.map(r=>`<div class="report-row">${rowHTML(r)}<div class="report-items">${itemsText(r)}</div><button class="btn danger full" onclick="removeReport('${r.tanggal}')">Hapus</button></div>`).join('') || '<p class="small">Belum ada data.</p>';
+}
+function rowHTML(r){ return `<div class="soft-row"><div class="row-head"><span>${r.tanggal}</span><span>${rupiah(r.total)}</span></div><div class="small">${totalQty(r)} item terjual ${r.catatan ? '• '+r.catatan : ''}</div></div>`; }
+function totalQty(r){ return ['produk','extra','minuman'].flatMap(c=>r[c]||[]).reduce((a,b)=>a+Number(b.jumlah||0),0); }
+function itemsText(r){ return ['produk','extra','minuman'].flatMap(c=>r[c]||[]).filter(x=>x.jumlah>0).map(x=>`${x.nama} x${x.jumlah} = ${rupiah(x.total)}`).join('<br>') || '-'; }
+async function removeReport(tgl){ if(confirm('Hapus laporan tanggal ini?')){ await deleteReport(tgl); renderReports(); } }
+async function exportCSV(){
+  const all = await getAllReports();
+  let csv = 'Tanggal,Kategori,Nama,Harga,Jumlah,Total\n';
+  all.forEach(r=>['produk','extra','minuman'].forEach(c=>(r[c]||[]).filter(x=>x.jumlah>0).forEach(x=>csv+=`${r.tanggal},${c},${x.nama},${x.harga},${x.jumlah},${x.total}\n`)));
+  const url = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  const a = document.createElement('a'); a.href=url; a.download='laporan-akang-hamzah.csv'; a.click(); URL.revokeObjectURL(url);
+}
+
+async function startSettings(){
+  settings = await getSettings(); brandInput.value=settings.brand; waInput.value=settings.wa||''; renderMenuEditor();
+}
+async function saveBrandSettings(){ settings.brand=brandInput.value; settings.wa=waInput.value; await saveSettings(settings); alert('Setting tersimpan'); }
+function renderMenuEditor(){
+  menuEditor.innerHTML = ['produk','extra','minuman'].map(cat=>`<h2>${cat.toUpperCase()}</h2>` + settings.menu[cat].map((x,i)=>`<div class="edit-row"><input value="${x.nama}" onchange="settings.menu.${cat}[${i}].nama=this.value"><input type="number" value="${x.harga}" onchange="settings.menu.${cat}[${i}].harga=Number(this.value)"><span class="small">${cat}</span><button class="btn danger" onclick="deleteMenuItem('${cat}',${i})">Hapus</button></div>`).join('')).join('') + '<button class="btn primary full" onclick="saveSettings(settings).then(()=>alert(\'Menu tersimpan\'))">Simpan Semua Menu</button>';
+}
+async function addMenuItem(){
+  const nama = newName.value.trim(); const harga = Number(newPrice.value||0); const cat = newCat.value;
+  if(!nama || !harga) return alert('Nama dan harga wajib diisi');
+  settings.menu[cat].push({nama,harga}); await saveSettings(settings); newName.value=''; newPrice.value=''; renderMenuEditor();
+}
+async function deleteMenuItem(cat,i){ settings.menu[cat].splice(i,1); await saveSettings(settings); renderMenuEditor(); }
+async function resetDefaultSettings(){ if(confirm('Kembalikan setting default?')){ settings = structuredClone(DEFAULT_SETTINGS); await saveSettings(settings); location.reload(); } }
