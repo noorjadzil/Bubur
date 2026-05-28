@@ -13,11 +13,12 @@
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+  margin:0 auto;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;
   background:
     radial-gradient(circle at top left,#dbeafe 0,#f8fafc 34%,var(--bg) 100%);
-  color:var(--text);padding-bottom:92px;
+  color:var(--text);padding-bottom:96px;max-width:480px;min-height:100vh;
 }
+@media(min-width:481px){body{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
 header{
   position:relative;overflow:hidden;
   background:linear-gradient(135deg,var(--text),var(--primary) 58%,var(--accent));
@@ -28,9 +29,9 @@ header:before{
   content:"";position:absolute;right:-55px;top:-65px;width:180px;height:180px;
   background:#ffffff22;border-radius:999px;
 }
-h1{margin:0;font-size:23px;letter-spacing:-.3px}
+h1{margin:0;font-size:22px;letter-spacing:-.3px}
 header p{margin:7px 0 0;color:#dbeafe;font-weight:700}
-.wrap{max-width:980px;margin:auto;padding:14px}
+.wrap{max-width:480px;margin:auto;padding:10px}
 .card{
   background:color-mix(in srgb,var(--card) 93%,white);
   border:1px solid var(--line);border-radius:22px;padding:14px;margin-bottom:14px;
@@ -110,12 +111,60 @@ button{
   display:inline-flex;align-items:center;gap:6px;background:#ffffff20;border:1px solid #ffffff30;
   padding:7px 10px;border-radius:999px;margin-top:10px;font-weight:900;color:#fff;
 }
+.toast{position:fixed;left:14px;right:14px;bottom:92px;z-index:120;display:none;justify-content:center}
+.toast.show{display:flex;animation:fadeIn .2s ease}
+.toast span{background:#0f172a;color:white;padding:13px 16px;border-radius:18px;font-weight:900;box-shadow:0 18px 50px #02061744}
+
+.confirm-backdrop{
+  position:fixed;inset:0;background:#0f172a99;backdrop-filter:blur(10px);
+  display:none;align-items:flex-end;justify-content:center;z-index:99;padding:14px;
+}
+.confirm-backdrop.show{display:flex;animation:fadeIn .18s ease}
+.confirm-box{
+  width:min(430px,100%);background:#fff;border:1px solid #ffffff66;border-radius:28px;
+  padding:18px;box-shadow:0 28px 80px #02061755;animation:slideUp .22s ease;
+}
+.confirm-icon{
+  width:54px;height:54px;border-radius:19px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--primary),var(--accent));color:white;
+  font-size:27px;font-weight:1000;margin-bottom:12px;
+}
+.confirm-title{font-size:19px;font-weight:1000;margin:0 0 6px;letter-spacing:-.2px}
+.confirm-text{margin:0;color:var(--muted);font-weight:750;line-height:1.45}
+.confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.confirm-actions button{margin-top:0}
+.btn-cancel{background:#f1f5f9;color:#334155}
+.btn-ok{background:linear-gradient(135deg,var(--primary),var(--accent));color:white}
+.btn-ok.green-ok{background:linear-gradient(135deg,var(--success),#22c55e)}
+.btn-ok.red-ok{background:linear-gradient(135deg,var(--danger),#ef4444)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(min-width:620px){.confirm-backdrop{align-items:center}}
+
 @media(max-width:560px){
-  .wrap{padding:10px}.card{padding:12px;border-radius:20px}
+  .wrap{padding:9px}.card{padding:11px;border-radius:20px;margin-bottom:10px}
+  header{padding:18px 14px 20px;border-radius:0 0 26px 26px}
+  .grid{grid-template-columns:1fr;gap:8px}
   .grid2{grid-template-columns:1fr}
-  .item-card{grid-template-columns:1fr 68px;padding:10px}
-  .qty{height:46px;font-size:20px;padding:8px}
-  .stok-grid{grid-template-columns:1fr 1fr 1fr}
+  .row{gap:8px}
+  button{padding:12px 10px;border-radius:15px}
+  .item-card{grid-template-columns:1fr 62px;padding:8px;margin:6px 0;border-radius:16px}
+  .item-card b{font-size:13px;margin-bottom:2px}
+  .price{font-size:11px}
+  .qty{height:42px;font-size:19px;padding:6px;border-radius:14px}
+  .stok-grid{grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .stok-grid input{padding:9px;border-radius:13px}
+  .check-grid{grid-template-columns:1fr 1fr;gap:7px}
+  .check-card{padding:8px;border-radius:15px}
+  .check-name{font-size:12px}
+  .seg span{font-size:11px;padding:8px 4px}
+}
+.sync-status{
+  margin-top:8px;border:1px solid #ffffff30;background:#ffffff18;color:#e0f2fe;
+  display:inline-flex;gap:6px;align-items:center;padding:7px 10px;border-radius:999px;font-weight:900;font-size:12px;
+}
+.savebar{
+  position:sticky;bottom:84px;z-index:8;
 }
 </style>
 </head>
@@ -124,6 +173,7 @@ button{
   <h1>Input Penjualan</h1>
   <p data-brand></p>
   <div class="operator-badge" id="operatorBadge">Operator: -</div>
+  <div class="sync-status" id="syncStatus">IndexedDB + Firebase siap</div>
 </header>
 
 <main class="wrap">
@@ -137,26 +187,42 @@ button{
         <select id="operator" onchange="setOperatorBadge()"></select>
       </label>
       <label>Catatan
-        <input id="catatan" placeholder="Catatan transaksi">
+        <textarea id="catatan" placeholder="Catatan transaksi"
+style="min-height:90px;resize:vertical;line-height:1.5"></textarea>
       </label>
     </div>
   </section>
 
   <div id="area"></div>
 
-  <section class="card">
+  <section class="card savebar">
     <div class="section-title">
       <b>Total Semua</b>
       <div class="money" id="grand">Rp 0</div>
     </div>
     <div class="row">
-      <button class="primary" onclick="simpan()">Simpan</button>
-      <button class="green" onclick="kirimWA()">Simpan & Kirim WA</button>
+      <button class="primary" onclick="konfirmasiSimpan()">Simpan</button>
+      <button class="green" onclick="konfirmasiKirimWA()">Simpan & Kirim WA</button>
     </div>
-    <button class="red" onclick="resetForm()">Reset Input</button>
+    <button class="red" onclick="konfirmasiReset()">Reset Input</button>
     <p class="small">Setelah simpan, jumlah otomatis kembali kosong agar siap transaksi berikutnya.</p>
   </section>
 </main>
+
+
+<div class="confirm-backdrop" id="confirmModal" onclick="tutupKonfirmasi(event)">
+  <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="confirm-icon" id="confirmIcon">?</div>
+    <h3 class="confirm-title" id="confirmTitle">Konfirmasi</h3>
+    <p class="confirm-text" id="confirmText">Apakah Anda yakin?</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn-cancel" onclick="batalKonfirmasi()">Batal</button>
+      <button type="button" class="btn-ok" id="confirmYes">Ya, lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastText">Berhasil</span></div>
 
 <div id="navbox"></div>
 
@@ -171,6 +237,96 @@ const DEFAULT_ITEMS={
 };
 const DEFAULT_THEME={brand:'Bubur Ayam Bandung Akang Hamzah',bg:'#f4f7fb',card:'#ffffff',text:'#0f172a',primary:'#1e3a8a',accent:'#2563eb',success:'#15803d',danger:'#b91c1c'};
 const DEFAULT_OPERATORS=['Akang Hamzah','Operator 1','Operator 2'];
+
+const FIREBASE_URL='https://bubur-60a27-default-rtdb.asia-southeast1.firebasedatabase.app';
+const DB_NAME='bubur_akang_hamzah_db';
+const DB_VERSION=1;
+let dbPromise=null;
+
+function openDB(){
+  if(dbPromise)return dbPromise;
+  dbPromise=new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,DB_VERSION);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('laporan')){
+        const s=db.createObjectStore('laporan',{keyPath:'id'});
+        s.createIndex('tanggal','tanggal',{unique:false});
+        s.createIndex('synced','synced',{unique:false});
+      }
+      if(!db.objectStoreNames.contains('settings')){
+        db.createObjectStore('settings',{keyPath:'key'});
+      }
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+  return dbPromise;
+}
+async function idbPut(storeName,value){
+  const db=await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(storeName,'readwrite');
+    tx.objectStore(storeName).put(value);
+    tx.oncomplete=()=>resolve(true);
+    tx.onerror=()=>reject(tx.error);
+  });
+}
+async function idbGet(storeName,key){
+  const db=await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(storeName,'readonly');
+    const req=tx.objectStore(storeName).get(key);
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function idbGetAll(storeName){
+  const db=await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(storeName,'readonly');
+    const req=tx.objectStore(storeName).getAll();
+    req.onsuccess=()=>resolve(req.result||[]);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function saveTransactionIDB(d){
+  await idbPut('laporan',d);
+  return d;
+}
+async function syncToFirebase(d){
+  if(!navigator.onLine)throw new Error('offline');
+  const path=`/laporan/${encodeURIComponent(d.tanggal)}/${encodeURIComponent(d.id)}.json`;
+  const res=await fetch(FIREBASE_URL+path,{
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({...d,synced:true,syncedAt:new Date().toISOString()})
+  });
+  if(!res.ok)throw new Error('Firebase gagal: '+res.status);
+  const synced={...d,synced:true,syncedAt:new Date().toISOString()};
+  await idbPut('laporan',synced);
+  return synced;
+}
+async function syncPending(){
+  try{
+    const all=await idbGetAll('laporan');
+    const pending=all.filter(x=>!x.synced);
+    if(!pending.length){setSyncStatus('Semua data tersinkron');return}
+    setSyncStatus(`Sinkron ${pending.length} data...`);
+    for(const d of pending){
+      try{await syncToFirebase(d)}catch(e){}
+    }
+    const left=(await idbGetAll('laporan')).filter(x=>!x.synced).length;
+    setSyncStatus(left?`${left} data menunggu internet`:'Semua data tersinkron');
+  }catch(e){setSyncStatus('IndexedDB belum siap')}
+}
+function setSyncStatus(text){
+  const el=document.getElementById('syncStatus');
+  if(el)el.textContent=text;
+}
+window.addEventListener('online',syncPending);
+window.getLaporanIDB=async()=>await idbGetAll('laporan');
+
 
 function today(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}
 
@@ -212,8 +368,6 @@ function nav(active){
 }
 
 let items=getItems();
-let transaksiAktifId=null;
-let transaksiAktifTanggal=null;
 tanggal.value=today();
 navbox.innerHTML=nav('input');
 applyTheme();
@@ -308,7 +462,7 @@ function buatData(){
   let produk=ambilKel('produk'),extra=ambilKel('extra'),minuman=ambilKel('minuman');
   let total=[...produk,...extra,...minuman].reduce((a,b)=>a+b.total,0);
   return {
-    id:Date.now(),
+    id:String(Date.now())+'_'+Math.random().toString(36).slice(2,8),
     waktu:new Date().toLocaleString('id-ID'),
     tanggal:tanggal.value,
     operator:operator.value||'',
@@ -336,87 +490,103 @@ function hitung(){
   grand.textContent=rp(total);
 }
 
-function showToast(msg){
-  let old=document.getElementById('toastNotif');
-  if(old)old.remove();
-
-  let toast=document.createElement('div');
-  toast.id='toastNotif';
-  toast.innerHTML='✅ '+msg;
-
-  toast.style.cssText=`
-    position:fixed;
-    top:18px;
-    left:50%;
-    transform:translateX(-50%);
-    background:linear-gradient(135deg,#15803d,#22c55e);
-    color:white;
-    padding:14px 18px;
-    border-radius:18px;
-    font-weight:900;
-    font-size:14px;
-    box-shadow:0 18px 40px rgba(0,0,0,.25);
-    z-index:9999;
-    opacity:0;
-    transition:.25s;
-    backdrop-filter:blur(10px);
-  `;
-
-  document.body.appendChild(toast);
-
-  requestAnimationFrame(()=>{
-    toast.style.opacity='1';
-    toast.style.top='26px';
+let aksiKonfirmasi=null;
+function bukaKonfirmasi({judul,pesan,ikon='?',teksYa='Ya, lanjutkan',mode='primary',aksi}){
+  aksiKonfirmasi=aksi;
+  confirmTitle.textContent=judul;
+  confirmText.textContent=pesan;
+  confirmIcon.textContent=ikon;
+  confirmYes.textContent=teksYa;
+  confirmYes.className='btn-ok '+(mode==='green'?'green-ok':mode==='red'?'red-ok':'');
+  confirmModal.classList.add('show');
+}
+function batalKonfirmasi(){
+  aksiKonfirmasi=null;
+  confirmModal.classList.remove('show');
+}
+function tutupKonfirmasi(e){
+  if(e.target===confirmModal)batalKonfirmasi();
+}
+confirmYes.onclick=function(){
+  const aksi=aksiKonfirmasi;
+  batalKonfirmasi();
+  if(typeof aksi==='function')aksi();
+};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')batalKonfirmasi()});
+function adaInputTerisi(){
+  const qty=[...document.querySelectorAll('input[type=number]:not([readonly])')].some(x=>Number(x.value||0)>0);
+  const cekKurang=[...document.querySelectorAll('.seg input[value="kurang"]')].some(x=>x.checked);
+  return qty||cekKurang||catatan.value.trim();
+}
+function konfirmasiSimpan(){
+  if(!adaInputTerisi())return bukaKonfirmasi({
+    judul:'Input masih kosong',
+    pesan:'Belum ada jumlah, stok, cek barang kurang, atau catatan. Tetap simpan transaksi kosong?',
+    ikon:'!',teksYa:'Tetap simpan',mode:'red',aksi:()=>simpan()
   });
-
-  setTimeout(()=>{
-    toast.style.opacity='0';
-    toast.style.top='10px';
-    setTimeout(()=>toast.remove(),250);
-  },1800);
+  bukaKonfirmasi({
+    judul:'Simpan transaksi?',
+    pesan:'Data akan masuk ke laporan, lalu form otomatis dikosongkan untuk transaksi berikutnya.',
+    ikon:'✓',teksYa:'Ya, simpan',mode:'primary',aksi:()=>simpan()
+  });
+}
+function konfirmasiKirimWA(){
+  if(!adaInputTerisi())return bukaKonfirmasi({
+    judul:'Input masih kosong',
+    pesan:'Belum ada data transaksi. Tetap simpan dan buka WhatsApp?',
+    ikon:'!',teksYa:'Tetap kirim',mode:'red',aksi:()=>kirimWA()
+  });
+  bukaKonfirmasi({
+    judul:'Simpan & kirim WhatsApp?',
+    pesan:'Transaksi akan disimpan ke laporan, setelah itu ringkasan akan dibuka di WhatsApp.',
+    ikon:'➤',teksYa:'Ya, kirim WA',mode:'green',aksi:()=>kirimWA()
+  });
+}
+function konfirmasiReset(){
+  if(!adaInputTerisi())return resetForm();
+  bukaKonfirmasi({
+    judul:'Reset input?',
+    pesan:'Semua angka, pilihan cek barang, dan catatan yang belum disimpan akan dikosongkan.',
+    ikon:'×',teksYa:'Ya, reset',mode:'red',aksi:()=>resetForm()
+  });
 }
 
-function simpan(noAlert=false){
-  let d=buatData();
-
-  if(transaksiAktifId){
-    d.id=transaksiAktifId;
-  }else{
-    transaksiAktifId=d.id;
+function tampilToast(pesan){
+  toastText.textContent=pesan;
+  toast.classList.add('show');
+  clearTimeout(window.toastTimer);
+  window.toastTimer=setTimeout(()=>toast.classList.remove('show'),2200);
+}
+async function simpan(noAlert=false){
+  let d={...buatData(),synced:false,createdAt:new Date().toISOString()};
+  try{
+    setSyncStatus('Menyimpan ke IndexedDB...');
+    await saveTransactionIDB(d);
+    setSyncStatus('Tersimpan lokal, sinkron Firebase...');
+    try{
+      await syncToFirebase(d);
+      if(!noAlert)tampilToast('Transaksi tersimpan di HP & Firebase');
+      setSyncStatus('Tersimpan di IndexedDB + Firebase');
+    }catch(e){
+      if(!noAlert)tampilToast('Tersimpan di HP. Firebase menunggu internet.');
+      setSyncStatus('Tersimpan lokal, Firebase tertunda');
+    }
+    resetForm();updateHari();
+  }catch(e){
+    tampilToast('Gagal menyimpan: '+(e.message||e));
+    setSyncStatus('Gagal menyimpan');
   }
-
-  transaksiAktifTanggal=d.tanggal;
-
-  let key='laporan_'+d.tanggal;
-  let arr=safeJSON(key,[]);
-  if(!Array.isArray(arr))arr=[arr];
-
-  let idx=arr.findIndex(x=>String(x.id)===String(d.id));
-  if(idx>=0){
-    arr[idx]=d;
-  }else{
-    arr.push(d);
-  }
-
-  localStorage.setItem(key,JSON.stringify(arr));
-
-  if(!noAlert)showToast('Transaksi berhasil disimpan / diperbarui');
-  updateHari();
 }
 function resetForm(){
-  transaksiAktifId=null;
-  transaksiAktifTanggal=null;
   document.querySelectorAll('input[type=number]:not([readonly])').forEach(x=>{x.value='0';markZero(x)});
   document.querySelectorAll('[id^="stok_sisa_"]').forEach(x=>x.value='0');
   document.querySelectorAll('.seg input[value="cukup"]').forEach(x=>x.checked=true);
   catatan.value='';
   hitung();
-  showToast('Input dikosongkan, siap transaksi baru');
 }
-function kirimWA(){
+async function kirimWA(){
   let d=buatData();
-  simpan(true);
-  showToast('Transaksi berhasil disimpan / diperbarui dan WhatsApp dibuka');
+  await simpan(true);
   let txt=`*LAPORAN PENJUALAN*\nTanggal: ${d.tanggal}\nWaktu: ${d.waktu}\nOperator: ${d.operator||'-'}\n\n`;
   [['produk',label('produk','Penjualan Bubur')],['extra',label('extra','Extra Topping')],['minuman',label('minuman','Minuman / Lainnya')]].forEach(([k,judul])=>{
     let ada=d[k].filter(x=>x.jumlah>0);
@@ -430,8 +600,10 @@ function kirimWA(){
   if(kurang.length)txt+='*BARANG KURANG*\n'+kurang.map(x=>'- '+x.nama).join('\n')+'\n\n';
   txt+=`*TOTAL: ${rp(d.total)}*`;
   if(d.catatan)txt+=`\nCatatan: ${d.catatan}`;
+  tampilToast('Transaksi tersimpan, WhatsApp dibuka');
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
 }
+openDB().then(()=>syncPending()).catch(()=>setSyncStatus('IndexedDB tidak tersedia'));
 render();
 </script>
 </body>
