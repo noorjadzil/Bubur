@@ -333,6 +333,47 @@ function hitung(){
   }));
   grand.textContent=rp(total);
 }
+
+function showToast(msg){
+  let old=document.getElementById('toastNotif');
+  if(old)old.remove();
+
+  let toast=document.createElement('div');
+  toast.id='toastNotif';
+  toast.innerHTML='✅ '+msg;
+
+  toast.style.cssText=`
+    position:fixed;
+    top:18px;
+    left:50%;
+    transform:translateX(-50%);
+    background:linear-gradient(135deg,#15803d,#22c55e);
+    color:white;
+    padding:14px 18px;
+    border-radius:18px;
+    font-weight:900;
+    font-size:14px;
+    box-shadow:0 18px 40px rgba(0,0,0,.25);
+    z-index:9999;
+    opacity:0;
+    transition:.25s;
+    backdrop-filter:blur(10px);
+  `;
+
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(()=>{
+    toast.style.opacity='1';
+    toast.style.top='26px';
+  });
+
+  setTimeout(()=>{
+    toast.style.opacity='0';
+    toast.style.top='10px';
+    setTimeout(()=>toast.remove(),250);
+  },1800);
+}
+
 function simpan(noAlert=false){
   let d=buatData();
   let key='laporan_'+d.tanggal;
@@ -340,8 +381,8 @@ function simpan(noAlert=false){
   if(!Array.isArray(arr))arr=[arr];
   arr.push(d);
   localStorage.setItem(key,JSON.stringify(arr));
-  if(!noAlert)alert('Tersimpan');
-  resetForm();updateHari();
+  if(!noAlert)showToast('Transaksi berhasil disimpan');
+  updateHari();
 }
 function resetForm(){
   document.querySelectorAll('input[type=number]:not([readonly])').forEach(x=>{x.value='0';markZero(x)});
