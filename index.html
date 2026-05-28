@@ -13,12 +13,11 @@
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  margin:0 auto;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+  margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;
   background:
     radial-gradient(circle at top left,#dbeafe 0,#f8fafc 34%,var(--bg) 100%);
-  color:var(--text);padding-bottom:96px;max-width:480px;min-height:100vh;
+  color:var(--text);padding-bottom:92px;
 }
-@media(min-width:481px){body{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
 header{
   position:relative;overflow:hidden;
   background:linear-gradient(135deg,var(--text),var(--primary) 58%,var(--accent));
@@ -29,9 +28,9 @@ header:before{
   content:"";position:absolute;right:-55px;top:-65px;width:180px;height:180px;
   background:#ffffff22;border-radius:999px;
 }
-h1{margin:0;font-size:22px;letter-spacing:-.3px}
+h1{margin:0;font-size:23px;letter-spacing:-.3px}
 header p{margin:7px 0 0;color:#dbeafe;font-weight:700}
-.wrap{max-width:480px;margin:auto;padding:10px}
+.wrap{max-width:980px;margin:auto;padding:14px}
 .card{
   background:color-mix(in srgb,var(--card) 93%,white);
   border:1px solid var(--line);border-radius:22px;padding:14px;margin-bottom:14px;
@@ -142,29 +141,11 @@ button{
 @media(min-width:620px){.confirm-backdrop{align-items:center}}
 
 @media(max-width:560px){
-  .wrap{padding:9px}.card{padding:11px;border-radius:20px;margin-bottom:10px}
-  header{padding:18px 14px 20px;border-radius:0 0 26px 26px}
-  .grid{grid-template-columns:1fr;gap:8px}
+  .wrap{padding:10px}.card{padding:12px;border-radius:20px}
   .grid2{grid-template-columns:1fr}
-  .row{gap:8px}
-  button{padding:12px 10px;border-radius:15px}
-  .item-card{grid-template-columns:1fr 62px;padding:8px;margin:6px 0;border-radius:16px}
-  .item-card b{font-size:13px;margin-bottom:2px}
-  .price{font-size:11px}
-  .qty{height:42px;font-size:19px;padding:6px;border-radius:14px}
-  .stok-grid{grid-template-columns:1fr 1fr 1fr;gap:6px}
-  .stok-grid input{padding:9px;border-radius:13px}
-  .check-grid{grid-template-columns:1fr 1fr;gap:7px}
-  .check-card{padding:8px;border-radius:15px}
-  .check-name{font-size:12px}
-  .seg span{font-size:11px;padding:8px 4px}
-}
-.sync-status{
-  margin-top:8px;border:1px solid #ffffff30;background:#ffffff18;color:#e0f2fe;
-  display:inline-flex;gap:6px;align-items:center;padding:7px 10px;border-radius:999px;font-weight:900;font-size:12px;
-}
-.savebar{
-  position:sticky;bottom:84px;z-index:8;
+  .item-card{grid-template-columns:1fr 68px;padding:10px}
+  .qty{height:46px;font-size:20px;padding:8px}
+  .stok-grid{grid-template-columns:1fr 1fr 1fr}
 }
 </style>
 </head>
@@ -173,7 +154,6 @@ button{
   <h1>Input Penjualan</h1>
   <p data-brand></p>
   <div class="operator-badge" id="operatorBadge">Operator: -</div>
-  <div class="sync-status" id="syncStatus">IndexedDB + Firebase siap</div>
 </header>
 
 <main class="wrap">
@@ -186,16 +166,21 @@ button{
       <label>Operator
         <select id="operator" onchange="setOperatorBadge()"></select>
       </label>
-      <label>Catatan
-        <textarea id="catatan" placeholder="Catatan transaksi"
-style="min-height:90px;resize:vertical;line-height:1.5"></textarea>
-      </label>
     </div>
+  </section>
+
+  <section class="card">
+    <div class="section-title">
+      <b>Catatan</b>
+      <span class="pill">Opsional</span>
+    </div>
+    <textarea id="catatan" placeholder="Catatan transaksi, stok, kekurangan barang, atau evaluasi harian..."
+style="min-height:160px;resize:vertical;line-height:1.6"></textarea>
   </section>
 
   <div id="area"></div>
 
-  <section class="card savebar">
+  <section class="card">
     <div class="section-title">
       <b>Total Semua</b>
       <div class="money" id="grand">Rp 0</div>
@@ -237,96 +222,6 @@ const DEFAULT_ITEMS={
 };
 const DEFAULT_THEME={brand:'Bubur Ayam Bandung Akang Hamzah',bg:'#f4f7fb',card:'#ffffff',text:'#0f172a',primary:'#1e3a8a',accent:'#2563eb',success:'#15803d',danger:'#b91c1c'};
 const DEFAULT_OPERATORS=['Akang Hamzah','Operator 1','Operator 2'];
-
-const FIREBASE_URL='https://bubur-60a27-default-rtdb.asia-southeast1.firebasedatabase.app';
-const DB_NAME='bubur_akang_hamzah_db';
-const DB_VERSION=1;
-let dbPromise=null;
-
-function openDB(){
-  if(dbPromise)return dbPromise;
-  dbPromise=new Promise((resolve,reject)=>{
-    const req=indexedDB.open(DB_NAME,DB_VERSION);
-    req.onupgradeneeded=e=>{
-      const db=e.target.result;
-      if(!db.objectStoreNames.contains('laporan')){
-        const s=db.createObjectStore('laporan',{keyPath:'id'});
-        s.createIndex('tanggal','tanggal',{unique:false});
-        s.createIndex('synced','synced',{unique:false});
-      }
-      if(!db.objectStoreNames.contains('settings')){
-        db.createObjectStore('settings',{keyPath:'key'});
-      }
-    };
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
-  return dbPromise;
-}
-async function idbPut(storeName,value){
-  const db=await openDB();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(storeName,'readwrite');
-    tx.objectStore(storeName).put(value);
-    tx.oncomplete=()=>resolve(true);
-    tx.onerror=()=>reject(tx.error);
-  });
-}
-async function idbGet(storeName,key){
-  const db=await openDB();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(storeName,'readonly');
-    const req=tx.objectStore(storeName).get(key);
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
-}
-async function idbGetAll(storeName){
-  const db=await openDB();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(storeName,'readonly');
-    const req=tx.objectStore(storeName).getAll();
-    req.onsuccess=()=>resolve(req.result||[]);
-    req.onerror=()=>reject(req.error);
-  });
-}
-async function saveTransactionIDB(d){
-  await idbPut('laporan',d);
-  return d;
-}
-async function syncToFirebase(d){
-  if(!navigator.onLine)throw new Error('offline');
-  const path=`/laporan/${encodeURIComponent(d.tanggal)}/${encodeURIComponent(d.id)}.json`;
-  const res=await fetch(FIREBASE_URL+path,{
-    method:'PUT',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({...d,synced:true,syncedAt:new Date().toISOString()})
-  });
-  if(!res.ok)throw new Error('Firebase gagal: '+res.status);
-  const synced={...d,synced:true,syncedAt:new Date().toISOString()};
-  await idbPut('laporan',synced);
-  return synced;
-}
-async function syncPending(){
-  try{
-    const all=await idbGetAll('laporan');
-    const pending=all.filter(x=>!x.synced);
-    if(!pending.length){setSyncStatus('Semua data tersinkron');return}
-    setSyncStatus(`Sinkron ${pending.length} data...`);
-    for(const d of pending){
-      try{await syncToFirebase(d)}catch(e){}
-    }
-    const left=(await idbGetAll('laporan')).filter(x=>!x.synced).length;
-    setSyncStatus(left?`${left} data menunggu internet`:'Semua data tersinkron');
-  }catch(e){setSyncStatus('IndexedDB belum siap')}
-}
-function setSyncStatus(text){
-  const el=document.getElementById('syncStatus');
-  if(el)el.textContent=text;
-}
-window.addEventListener('online',syncPending);
-window.getLaporanIDB=async()=>await idbGetAll('laporan');
-
 
 function today(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}
 
@@ -462,7 +357,7 @@ function buatData(){
   let produk=ambilKel('produk'),extra=ambilKel('extra'),minuman=ambilKel('minuman');
   let total=[...produk,...extra,...minuman].reduce((a,b)=>a+b.total,0);
   return {
-    id:String(Date.now())+'_'+Math.random().toString(36).slice(2,8),
+    id:Date.now(),
     waktu:new Date().toLocaleString('id-ID'),
     tanggal:tanggal.value,
     operator:operator.value||'',
@@ -557,25 +452,15 @@ function tampilToast(pesan){
   clearTimeout(window.toastTimer);
   window.toastTimer=setTimeout(()=>toast.classList.remove('show'),2200);
 }
-async function simpan(noAlert=false){
-  let d={...buatData(),synced:false,createdAt:new Date().toISOString()};
-  try{
-    setSyncStatus('Menyimpan ke IndexedDB...');
-    await saveTransactionIDB(d);
-    setSyncStatus('Tersimpan lokal, sinkron Firebase...');
-    try{
-      await syncToFirebase(d);
-      if(!noAlert)tampilToast('Transaksi tersimpan di HP & Firebase');
-      setSyncStatus('Tersimpan di IndexedDB + Firebase');
-    }catch(e){
-      if(!noAlert)tampilToast('Tersimpan di HP. Firebase menunggu internet.');
-      setSyncStatus('Tersimpan lokal, Firebase tertunda');
-    }
-    resetForm();updateHari();
-  }catch(e){
-    tampilToast('Gagal menyimpan: '+(e.message||e));
-    setSyncStatus('Gagal menyimpan');
-  }
+function simpan(noAlert=false){
+  let d=buatData();
+  let key='laporan_'+d.tanggal;
+  let arr=safeJSON(key,[]);
+  if(!Array.isArray(arr))arr=[arr];
+  arr.push(d);
+  localStorage.setItem(key,JSON.stringify(arr));
+  if(!noAlert)tampilToast('Transaksi berhasil tersimpan');
+  resetForm();updateHari();
 }
 function resetForm(){
   document.querySelectorAll('input[type=number]:not([readonly])').forEach(x=>{x.value='0';markZero(x)});
@@ -584,9 +469,9 @@ function resetForm(){
   catatan.value='';
   hitung();
 }
-async function kirimWA(){
+function kirimWA(){
   let d=buatData();
-  await simpan(true);
+  simpan(true);
   let txt=`*LAPORAN PENJUALAN*\nTanggal: ${d.tanggal}\nWaktu: ${d.waktu}\nOperator: ${d.operator||'-'}\n\n`;
   [['produk',label('produk','Penjualan Bubur')],['extra',label('extra','Extra Topping')],['minuman',label('minuman','Minuman / Lainnya')]].forEach(([k,judul])=>{
     let ada=d[k].filter(x=>x.jumlah>0);
@@ -603,7 +488,6 @@ async function kirimWA(){
   tampilToast('Transaksi tersimpan, WhatsApp dibuka');
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
 }
-openDB().then(()=>syncPending()).catch(()=>setSyncStatus('IndexedDB tidak tersedia'));
 render();
 </script>
 </body>
