@@ -394,6 +394,7 @@ function resetForm(){
 function kirimWA(){
   let d=buatData();
   simpan(true);
+  showToast('Transaksi berhasil disimpan dan WhatsApp dibuka');
   let txt=`*LAPORAN PENJUALAN*\nTanggal: ${d.tanggal}\nWaktu: ${d.waktu}\nOperator: ${d.operator||'-'}\n\n`;
   [['produk',label('produk','Penjualan Bubur')],['extra',label('extra','Extra Topping')],['minuman',label('minuman','Minuman / Lainnya')]].forEach(([k,judul])=>{
     let ada=d[k].filter(x=>x.jumlah>0);
