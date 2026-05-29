@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Laporan Penjualan</title>
+<style>
+:root{
+  --bg:#f4f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;
+  --primary:#1e3a8a;--accent:#2563eb;--line:#dbe3ef;
+  --success:#15803d;--danger:#b91c1c;--warn:#d97706;--soft:#eef2ff;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  max-width:480px;margin:0 auto;
+  font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;
+  background:radial-gradient(circle at top left,#dbeafe 0,#f8fafc 34%,var(--bg) 100%);
+  color:var(--text);padding-bottom:96px;min-height:100vh;
+}
+@media(min-width:481px){body{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
+button,input,select,textarea{font:inherit}
+header{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--text),var(--primary) 58%,var(--accent));
+  color:#fff;padding:20px 14px 20px;border-radius:0 0 30px 30px;
+  box-shadow:0 18px 45px #0f172a35;
+}
+header:before{
+  content:"";position:absolute;right:-60px;top:-70px;width:180px;height:180px;
+  background:#ffffff22;border-radius:999px;
+}
+h1{margin:0;font-size:22px;letter-spacing:-.3px}
+header p{margin:6px 0 0;color:#dbeafe;font-weight:800}
+.wrap{max-width:480px;margin:auto;padding:10px}
+.card{
+  background:color-mix(in srgb,var(--card) 94%,white);
+  border:1px solid var(--line);border-radius:22px;padding:13px;margin-bottom:12px;
+  box-shadow:0 12px 32px #0f172a12;backdrop-filter:blur(10px);
+}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.grid .wide{grid-column:1/-1}
+.row{display:flex;gap:9px}.row>*{flex:1}
+label{display:block;font-weight:950;font-size:12px;color:var(--text)}
+input,select,textarea{
+  width:100%;border:1px solid var(--line);border-radius:16px;padding:12px;
+  background:#fff;color:var(--text);outline:none;font-weight:800;margin-top:6px;
+}
+textarea{min-height:86px;resize:vertical;line-height:1.5}
+input:focus,select:focus,textarea:focus{border-color:#93c5fd;box-shadow:0 0 0 4px #dbeafe}
+button{border:0;border-radius:16px;padding:12px 13px;font-weight:1000;cursor:pointer;width:100%;margin-top:8px}
+.primary{background:linear-gradient(135deg,var(--primary),var(--accent));color:white}
+.green{background:linear-gradient(135deg,var(--success),#22c55e);color:white}
+.red{background:linear-gradient(135deg,var(--danger),#ef4444);color:white}
+.ghost{background:#f1f5f9;color:#334155}
+.warn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.nav{
+  position:fixed;left:0;right:0;bottom:0;background:#fffffff2;backdrop-filter:blur(16px);
+  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;padding:9px max(9px,env(safe-area-inset-left)) calc(9px + env(safe-area-inset-bottom));
+  z-index:20;max-width:480px;margin:auto;
+}
+.nav a{border-radius:18px;padding:11px 6px;text-align:center;text-decoration:none;font-weight:1000;color:var(--muted)}
+.nav a.on{background:linear-gradient(135deg,var(--primary),var(--accent));color:white}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;background:#eaf0fb;padding:6px;border-radius:20px}
+.tab{margin:0;background:transparent;color:var(--muted);padding:11px 4px;font-size:12px}
+.tab.on{background:#fff;color:var(--primary);box-shadow:0 8px 22px #0f172a10}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.section-title b{font-size:16px}
+.pill{
+  display:inline-flex;align-items:center;gap:5px;background:var(--soft);color:var(--primary);
+  padding:7px 10px;border-radius:999px;font-weight:1000;font-size:12px;white-space:nowrap;
+}
+.money{font-size:24px;font-weight:1000;color:var(--primary)}
+.small{font-size:12px;color:var(--muted);font-weight:800;line-height:1.45}
+.empty{padding:24px 10px;text-align:center;color:var(--muted);font-weight:850}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.summary .box{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px}
+.box .num{font-size:20px;font-weight:1000;color:var(--primary);margin-top:4px}
+.trx{border:1px solid var(--line);border-radius:20px;padding:12px;margin:10px 0;background:linear-gradient(180deg,#fff,#f8fafc)}
+.trx-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.trx-title{font-weight:1000}
+.trx-meta{font-size:12px;color:var(--muted);font-weight:850;margin-top:3px}
+.trx-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.mini{padding:9px 10px;margin:0;border-radius:13px;font-size:12px}
+.list{display:grid;gap:7px;margin-top:10px}
+.line{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border-top:1px dashed var(--line);padding-top:7px;font-size:13px}
+.line:first-child{border-top:0;padding-top:0}
+.line b{font-size:13px}.line .rpv{grid-column:1/-1;text-align:right;color:var(--primary);font-weight:1000}
+.danger-zone{border:1px solid #fecaca;background:#fff1f2;border-radius:20px;padding:12px}
+.status{margin-top:9px;background:#ffffff22;border:1px solid #ffffff30;color:#fff;border-radius:999px;padding:7px 10px;display:inline-flex;font-weight:900;font-size:12px}
+.toast{position:fixed;left:14px;right:14px;bottom:94px;z-index:80;display:none;justify-content:center;max-width:452px;margin:auto}
+.toast.show{display:flex;animation:fadeIn .18s ease}
+.toast span{background:#0f172a;color:#fff;padding:13px 16px;border-radius:18px;font-weight:950;box-shadow:0 18px 50px #02061744}
+.modal{position:fixed;inset:0;z-index:60;background:#0f172a99;backdrop-filter:blur(10px);display:none;align-items:flex-end;justify-content:center;padding:14px}
+.modal.show{display:flex}.sheet{width:min(480px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:26px 26px 0 0;padding:16px;box-shadow:0 28px 80px #02061755;animation:slideUp .2s ease}
+.sheet h3{margin:0 0 8px;font-size:19px}.edit-grid{display:grid;gap:8px}
+.edit-item{display:grid;grid-template-columns:1fr 72px;gap:8px;align-items:end;border:1px solid var(--line);border-radius:16px;padding:10px;background:#f8fafc}
+.edit-item b{font-size:13px}.qty{text-align:center;font-size:18px;font-weight:1000}
+
+/* Rekap bulanan kalender */
+.month-hero{
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:#fff;border-radius:24px;padding:16px;box-shadow:0 16px 38px #1e3a8a2d;
+}
+.month-hero .label{font-size:12px;color:#dbeafe;font-weight:900}
+.month-hero .big{font-size:26px;font-weight:1000;margin-top:5px}
+.month-hero .sub{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.month-hero .sub div{background:#ffffff20;border:1px solid #ffffff2f;border-radius:16px;padding:10px}
+.month-hero .sub b{display:block;font-size:16px}
+.month-note{
+  background:#fff;border:1px solid var(--line);border-radius:18px;padding:11px;
+  color:var(--muted);font-weight:800;font-size:12px;line-height:1.45;margin-top:10px;
+}
+.calendar-wrap{overflow:auto;border:1px solid var(--line);border-radius:20px;background:#fff}
+.calendar-table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;font-size:11px}
+.calendar-table th,.calendar-table td{
+  border-bottom:1px solid var(--line);border-right:1px solid #edf2f7;padding:8px;text-align:center;white-space:nowrap;
+}
+.calendar-table th{background:#eef2ff;color:#1e3a8a;font-weight:1000;position:sticky;top:0;z-index:2}
+.calendar-table .item-col{
+  position:sticky;left:0;z-index:3;text-align:left;background:#fff;min-width:132px;
+  box-shadow:8px 0 14px #0f172a0c;
+}
+.calendar-table th.item-col{background:#e0e7ff}
+.calendar-table .item-name{font-weight:1000;color:var(--text)}
+.calendar-table .item-price{font-size:10px;color:var(--muted);font-weight:800;margin-top:2px}
+.calendar-table .day-cell.has{background:#f8fafc;color:var(--primary);font-weight:1000}
+.calendar-table .total-col{background:#f8fafc;font-weight:1000;color:var(--primary)}
+.month-list{display:grid;gap:9px;margin-top:12px}
+.month-item{
+  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+  background:#fff;border:1px solid var(--line);border-radius:18px;padding:11px;
+}
+.month-item b{font-size:13px}.month-item .meta{font-size:12px;color:var(--muted);font-weight:800;margin-top:3px}
+.month-item .amount{text-align:right;color:var(--primary);font-weight:1000}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:380px){
+  .summary .box{padding:10px}.box .num{font-size:18px}.month-hero .big{font-size:23px}
+  .row{gap:7px}button{padding:11px 9px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Laporan</h1>
+  <p data-brand>Bubur Ayam Bandung Akang Hamzah</p>
+  <div class="status" id="statusText">Memuat data...</div>
+</header>
+<main class="wrap">
+  <section class="card">
+    <div class="tabs">
+      <button class="tab on" id="tabTransaksi" onclick="setMode('transaksi')">Transaksi</button>
+      <button class="tab" id="tabHarian" onclick="setMode('harian')">Harian</button>
+      <button class="tab" id="tabBulanan" onclick="setMode('bulanan')">Bulanan</button>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <label id="tanggalBox">Tanggal<input type="date" id="tanggal"></label>
+      <label id="bulanBox">Bulan<input type="month" id="bulan"></label>
+      <label class="wide">Cari item/operator/catatan<input id="q" placeholder="Contoh: Bubur Ori / Akang" oninput="render()"></label>
+    </div>
+    <div class="row">
+      <button class="primary" onclick="refreshOnline()">Perbarui Data</button>
+      <button class="ghost" onclick="render()">Tampilkan</button>
+    </div>
+  </section>
+  <details class="card danger-zone">
+    <summary style="font-weight:1000;cursor:pointer">Menu Hapus Data</summary>
+    <p class="small" style="margin-bottom:8px">Bagian ini sengaja disembunyikan agar laporan lebih aman dan nyaman dilihat.</p>
+    <div class="row">
+      <button class="warn" onclick="confirmDeleteDay()">Hapus Tanggal Ini</button>
+      <button class="red" onclick="confirmDeleteMonth()">Hapus Bulan Ini</button>
+    </div>
+  </details>
+  <div id="out"></div>
+</main>
+<div class="modal" id="editModal" onclick="closeEdit(event)"><div class="sheet"><div id="editContent"></div></div></div>
+<div class="toast" id="toast"><span id="toastText">Berhasil</span></div>
+<div id="navbox"></div>
+<script>
+const DEFAULT_ITEMS={produk:[{nama:'Bubur Ori',harga:7000},{nama:'Bubur Cakwe',harga:12000},{nama:'Bubur Telur',harga:12000},{nama:'Bubur Ayam Suwir',harga:15000},{nama:'Bubur Abon',harga:17000},{nama:'Bubur Spesial',harga:13000},{nama:'Bubur Istimewa',harga:17000}],extra:[{nama:'Cakwe',harga:2000},{nama:'Ayam Suwir',harga:3000},{nama:'Abon',harga:5000},{nama:'Irisan Telur Dadar',harga:1000},{nama:'Telur Rebus',harga:1000},{nama:'Kuah',harga:500},{nama:'Krupuk',harga:500}],minuman:[{nama:'Puyuh',harga:3000},{nama:'Cleo',harga:1000},{nama:'Teh Anget',harga:3000},{nama:'Es Teh',harga:3000}],stok:['Paper Bowl','Tali Segel','Sendok','Krupuk','Kripik Pangsit','Bawang Goreng','Kacang Kedelai'],kurang:['Cleo','Tisu','Plastik Kecap','Plastik Kuah','Plastik Sambal','Kecap Asin','Kecap Manis','Lada','Kresek Kecil','Kresek Tanggung','Kresek Besar'],labels:{produk:'Penjualan Bubur',extra:'Extra Topping',minuman:'Minuman / Lainnya',stok:'Stok Perlengkapan',kurang:'Cek Barang'}};
+const DEFAULT_THEME={brand:'Bubur Ayam Bandung Akang Hamzah',bg:'#f4f7fb',card:'#ffffff',text:'#0f172a',primary:'#1e3a8a',accent:'#2563eb',success:'#15803d',danger:'#b91c1c'};
+const FIREBASE_URL='https://bubur-60a27-default-rtdb.asia-southeast1.firebasedatabase.app';
+const DB_NAME='bubur_akang_hamzah_db'; const DB_VERSION=1;
+let dbPromise=null, MODE='transaksi', ALL=[];
+function today(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}
+function namaHari(tgl){const h=['Ahad','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'];return h[new Date(tgl).getDay()]||''}
+function rp(n){return 'Rp '+Number(n||0).toLocaleString('id-ID')}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+function safeJSON(k,d){try{return JSON.parse(localStorage.getItem(k)||'null')||d}catch(e){return d}}
+function getItems(){let x=safeJSON('app_items',null);if(!x){x=clone(DEFAULT_ITEMS);localStorage.setItem('app_items',JSON.stringify(x))}return Object.assign(clone(DEFAULT_ITEMS),x)}
+function getTheme(){return Object.assign({},DEFAULT_THEME,safeJSON('app_theme',{}))}
+function applyTheme(){const t=getTheme();['bg','card','text','primary','accent','success','danger'].forEach(k=>document.documentElement.style.setProperty('--'+k,t[k]));document.querySelector('[data-brand]').textContent=t.brand||DEFAULT_THEME.brand}
+function nav(active){return `<nav class="nav"><a class="${active==='input'?'on':''}" href="index.html">Input</a><a class="${active==='laporan'?'on':''}" href="laporan.html">Laporan</a><a class="${active==='setting'?'on':''}" href="setting.html">Setting</a></nav>`}
+function setStatus(t){statusText.textContent=t}
+function toast(t){toastText.textContent=t;toast.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.classList.remove('show'),2200)}
+function openDB(){if(dbPromise)return dbPromise;dbPromise=new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('laporan')){const s=db.createObjectStore('laporan',{keyPath:'id'});s.createIndex('tanggal','tanggal',{unique:false});s.createIndex('synced','synced',{unique:false})}if(!db.objectStoreNames.contains('settings'))db.createObjectStore('settings',{keyPath:'key'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});return dbPromise}
+async function idbAll(){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction('laporan','readonly'),r=tx.objectStore('laporan').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})}
+async function idbPut(d){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction('laporan','readwrite');tx.objectStore('laporan').put(d);tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error)})}
+async function idbDel(id){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction('laporan','readwrite');tx.objectStore('laporan').delete(id);tx.oncomplete=()=>res(true);tx.onerror=()=>rej(tx.error)})}
+async function firebasePut(d){if(!navigator.onLine)throw new Error('offline');const path=`/laporan/${encodeURIComponent(d.tanggal)}/${encodeURIComponent(d.id)}.json`;const body=JSON.stringify({...d,synced:true,syncedAt:new Date().toISOString()});const r=await fetch(FIREBASE_URL+path,{method:'PUT',headers:{'Content-Type':'application/json'},body});if(!r.ok)throw new Error('gagal');await idbPut({...d,synced:true,syncedAt:new Date().toISOString()})}
+async function firebaseDelete(date,id){if(!navigator.onLine)return;await fetch(`${FIREBASE_URL}/laporan/${encodeURIComponent(date)}/${encodeURIComponent(id)}.json`,{method:'DELETE'}).catch(()=>{})}
+async function loadLocal(){try{ALL=(await idbAll()).sort((a,b)=>(b.id||0)-(a.id||0));setStatus(navigator.onLine?'Data siap':'Data siap di perangkat');}catch(e){ALL=[];setStatus('Data belum bisa dibaca')}}
+function monthOf(x){return (x.tanggal||'').slice(0,7)}
+function flat(d){return [...(d.produk||[]),...(d.extra||[]),...(d.minuman||[])]}
+function calcTotal(d){d.total=flat(d).reduce((a,b)=>a+(Number(b.jumlah||0)*Number(b.harga||0)),0);['produk','extra','minuman'].forEach(k=>(d[k]||[]).forEach(x=>x.total=Number(x.jumlah||0)*Number(x.harga||0)));return d}
+function filtered(){let data=ALL.slice();const query=q.value.trim().toLowerCase();if(MODE==='transaksi')data=data.filter(x=>x.tanggal===tanggal.value);else data=data.filter(x=>monthOf(x)===bulan.value);if(query)data=data.filter(d=>JSON.stringify(d).toLowerCase().includes(query));return data}
+function setMode(m){MODE=m;['Transaksi','Harian','Bulanan'].forEach(n=>document.getElementById('tab'+n).classList.toggle('on',m===n.toLowerCase()));tanggalBox.style.display=m==='transaksi'?'block':'none';bulanBox.style.display=m==='transaksi'?'none':'block';render()}
+function summary(data){const total=data.reduce((a,b)=>a+(+b.total||0),0),trx=data.length,qty=data.reduce((a,d)=>a+flat(d).reduce((x,y)=>x+(+y.jumlah||0),0),0);return `<section class="card"><div class="summary"><div class="box"><span class="small">Total uang</span><div class="num">${rp(total)}</div></div><div class="box"><span class="small">Transaksi</span><div class="num">${trx}</div></div><div class="box"><span class="small">Item terjual</span><div class="num">${qty}</div></div><div class="box"><span class="small">Status</span><div class="num" style="font-size:15px">${navigator.onLine?'Online':'Offline'}</div></div></div></section>`}
+function transactionCard(d,idx){const rows=flat(d).filter(x=>+x.jumlah>0).map(x=>`<div class="line"><b>${esc(x.nama)}</b><span>${x.jumlah} × ${rp(x.harga)}</span><span class="rpv">${rp(x.total)}</span></div>`).join('')||'<div class="empty" style="padding:12px">Tidak ada item terjual</div>';const kurang=(d.kurang||[]).filter(x=>x.kurang||x.status==='kurang').map(x=>esc(x.nama)).join(', ');return `<div class="trx"><div class="trx-head"><div><div class="trx-title">Transaksi ${idx+1}</div><div class="trx-meta">${esc(d.tanggal||'')} • ${esc(d.waktu||'')} • ${esc(d.operator||'-')}</div></div><div class="pill">${rp(d.total)}</div></div><div class="list">${rows}</div>${kurang?`<p class="small"><b>Barang kurang:</b> ${kurang}</p>`:''}${d.catatan?`<p class="small"><b>Catatan:</b> ${esc(d.catatan)}</p>`:''}<div class="trx-actions"><button class="mini primary" onclick="openEdit(${d.id})">Edit</button><button class="mini red" onclick="confirmDeleteTrx(${d.id})">Hapus</button></div></div>`}
+function renderTransaksi(){const data=filtered().sort((a,b)=>(b.id||0)-(a.id||0));out.innerHTML=summary(data)+`<section class="card"><div class="section-title"><b>Daftar Transaksi</b><span class="pill">${esc(tanggal.value)}</span></div>${data.length?data.map(transactionCard).join(''):'<div class="empty">Belum ada transaksi pada tanggal ini.</div>'}</section>`}
+function renderHarian(){const data=filtered();let groups={};data.forEach(d=>{groups[d.tanggal]=groups[d.tanggal]||[];groups[d.tanggal].push(d)});let dates=Object.keys(groups).sort();let html=dates.map(date=>{const arr=groups[date],total=arr.reduce((a,b)=>a+(+b.total||0),0),qty=arr.reduce((a,d)=>a+flat(d).reduce((x,y)=>x+(+y.jumlah||0),0),0);return `<div class="trx"><div class="trx-head"><div><div class="trx-title">${esc(date)}</div><div class="trx-meta">${arr.length} transaksi • ${qty} item</div></div><div class="pill">${rp(total)}</div></div><div class="trx-actions"><button class="mini primary" onclick="tanggal.value='${date}';setMode('transaksi')">Lihat Transaksi</button><button class="mini red" onclick="deleteDay('${date}')">Hapus Hari Ini</button></div></div>`}).join('');out.innerHTML=summary(data)+`<section class="card"><div class="section-title"><b>Laporan Harian</b><span class="pill">Hanya tanggal yang ada data</span></div>${html||'<div class="empty">Belum ada data pada bulan ini.</div>'}</section>`}
+function renderBulanan(){
+  const data=filtered(), items=getItems(), order=[...(items.produk||[]),...(items.extra||[]),...(items.minuman||[])];
+  const ym=bulan.value;
+  const last=new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate();
+  let map={};
+  order.forEach(i=>map[i.nama]={harga:+i.harga||0,days:{},qty:0,total:0});
+  data.forEach(d=>flat(d).forEach(x=>{
+    if(!map[x.nama])map[x.nama]={harga:+x.harga||0,days:{},qty:0,total:0};
+    const day=String(+String(d.tanggal||'').slice(8,10));
+    const qty=+x.jumlah||0, total=qty*(+x.harga||0);
+    map[x.nama].days[day]=(map[x.nama].days[day]||0)+qty;
+    map[x.nama].qty+=qty;
+    map[x.nama].total+=total;
+  }));
+  const active=Object.entries(map).filter(([n,m])=>m.qty>0||m.total>0);
+  const totalUang=active.reduce((a,[n,m])=>a+m.total,0);
+  const totalQty=active.reduce((a,[n,m])=>a+m.qty,0);
+  const totalTrx=data.length;
+  const dayHeaders=Array.from({length:last},(_,i)=>`<th>${i+1}</th>`).join('');
+  const rows=active.map(([n,m])=>{
+    const cells=Array.from({length:last},(_,i)=>{
+      const d=String(i+1), v=m.days[d]||'';
+      return `<td class="day-cell ${v?'has':''}">${v||''}</td>`;
+    }).join('');
+    return `<tr>
+      <td class="item-col"><div class="item-name">${esc(n)}</div><div class="item-price">${rp(m.harga)}</div></td>
+      ${cells}
+      <td class="total-col">${m.qty}</td>
+      <td class="total-col">${rp(m.total)}</td>
+    </tr>`;
+  }).join('');
+  const list=active.map(([n,m])=>`<div class="month-item">
+    <div><b>${esc(n)}</b><div class="meta">${m.qty} terjual × ${rp(m.harga)}</div></div>
+    <div class="amount">${rp(m.total)}</div>
+  </div>`).join('');
+  out.innerHTML=`<section class="card">
+    <div class="month-hero">
+      <div class="label">REKAP BULANAN</div>
+      <div class="big">${rp(totalUang)}</div>
+      <div class="sub">
+        <div><span class="label">Transaksi</span><b>${totalTrx}</b></div>
+        <div><span class="label">Item Terjual</span><b>${totalQty}</b></div>
+      </div>
+    </div>
+    <div class="month-note">Geser tabel ke kanan untuk melihat tanggal 1–${last}. Kolom kiri item dibuat tetap agar lebih mudah dibaca di HP.</div>
+  </section>
+  <section class="card">
+    <div class="section-title"><b>Kalender Penjualan</b><span class="pill">${esc(ym)}</span></div>
+    <div class="calendar-wrap"><table class="calendar-table">
+      <tr><th class="item-col">Item</th>${dayHeaders}<th>Total</th><th>Uang</th></tr>
+      ${rows||`<tr><td colspan="${last+3}" class="empty">Belum ada data bulan ini</td></tr>`}
+    </table></div>
+  </section>
+  <section class="card">
+    <div class="section-title"><b>Ringkasan Item</b><span class="pill">${active.length} item</span></div>
+    <div class="month-list">${list||'<div class="empty">Belum ada item terjual.</div>'}</div>
+    <div class="row" style="margin-top:10px"><button class="red" onclick="confirmDeleteMonth()">Hapus Bulan Ini</button></div>
+  </section>`;
+}
+function render(){if(MODE==='transaksi')renderTransaksi(); if(MODE==='harian')renderHarian(); if(MODE==='bulanan')renderBulanan()}
+function findById(id){return ALL.find(x=>String(x.id)===String(id))}
+function openEdit(id){const d=clone(findById(id)); if(!d)return; const itemRows=['produk','extra','minuman'].map(k=>`<h4>${esc((d.labels&&d.labels[k])||k)}</h4><div class="edit-grid">${(d[k]||[]).map((it,i)=>`<div class="edit-item"><div><b>${esc(it.nama)}</b><div class="small">${rp(it.harga)}</div></div><input class="qty" type="number" min="0" inputmode="numeric" id="edit_${k}_${i}" value="${+it.jumlah||0}"></div>`).join('')}</div>`).join('');editContent.innerHTML=`<h3>Edit Transaksi</h3><p class="small">Ubah jumlah item, operator, tanggal, atau catatan. Setelah disimpan laporan otomatis dihitung ulang.</p><label>Tanggal<input type="date" id="editTanggal" value="${esc(d.tanggal)}"></label><label>Operator<input id="editOperator" value="${esc(d.operator||'')}"></label><label>Catatan<textarea id="editCatatan">${esc(d.catatan||'')}</textarea></label>${itemRows}<div class="row" style="margin-top:12px"><button class="ghost" onclick="editModal.classList.remove('show')">Batal</button><button class="green" onclick="saveEdit(${d.id})">Simpan Edit</button></div>`;editModal.dataset.id=id;editModal.classList.add('show')}
+function closeEdit(e){if(e.target===editModal)editModal.classList.remove('show')}
+async function saveEdit(id){let d=findById(id);if(!d)return;const oldDate=d.tanggal;d.tanggal=editTanggal.value;d.operator=editOperator.value;d.catatan=editCatatan.value;['produk','extra','minuman'].forEach(k=>(d[k]||[]).forEach((it,i)=>{it.jumlah=+document.getElementById(`edit_${k}_${i}`).value||0;it.total=it.jumlah*(+it.harga||0)}));d.editedAt=new Date().toISOString();d.synced=false;calcTotal(d);await idbPut(d);if(oldDate!==d.tanggal)await firebaseDelete(oldDate,d.id);try{await firebasePut(d);toast('Edit tersimpan dan dicadangkan')}catch(e){toast('Edit tersimpan di perangkat')}editModal.classList.remove('show');await loadLocal();render()}
+async function deleteTransaction(d){await idbDel(d.id);await firebaseDelete(d.tanggal,d.id);await loadLocal();render();toast('Transaksi dihapus')}
+function confirmDeleteTrx(id){const d=findById(id);if(!d)return;if(confirm('Hapus transaksi ini? Data akan dihapus dari perangkat dan cadangan online.'))deleteTransaction(d)}
+async function deleteDay(date){if(!confirm('Hapus semua transaksi tanggal '+date+'?'))return;const arr=ALL.filter(x=>x.tanggal===date);for(const d of arr){await idbDel(d.id);await firebaseDelete(d.tanggal,d.id)}await loadLocal();render();toast('Data harian dihapus')}
+function confirmDeleteDay(){deleteDay(tanggal.value)}
+async function deleteMonth(){const ym=bulan.value;if(!confirm('Hapus semua transaksi bulan '+ym+'?'))return;const arr=ALL.filter(x=>monthOf(x)===ym);for(const d of arr){await idbDel(d.id);await firebaseDelete(d.tanggal,d.id)}await loadLocal();render();toast('Data bulanan dihapus')}
+function confirmDeleteMonth(){deleteMonth()}
+async function refreshOnline(){if(!navigator.onLine){toast('Internet belum tersambung');return}setStatus('Mengambil data cadangan...');try{const ym=MODE==='transaksi'?tanggal.value.slice(0,7):bulan.value;const last=new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate();let count=0;for(let day=1;day<=last;day++){const date=ym+'-'+String(day).padStart(2,'0');const r=await fetch(`${FIREBASE_URL}/laporan/${encodeURIComponent(date)}.json`);if(r.ok){const obj=await r.json();if(obj)for(const k in obj){await idbPut(calcTotal(obj[k]));count++}}}await loadLocal();render();toast(count?'Data diperbarui':'Tidak ada data baru')}catch(e){toast('Data online belum bisa dibaca');setStatus('Data perangkat tetap aman')}}
+window.addEventListener('online',()=>setStatus('Online - cadangan aktif'));window.addEventListener('offline',()=>setStatus('Offline - data perangkat tetap bisa dibaca'));
+(async()=>{applyTheme();navbox.innerHTML=nav('laporan');tanggal.value=today();bulan.value=today().slice(0,7);tanggalBox.style.display='block';bulanBox.style.display='none';tanggal.onchange=render;bulan.onchange=render;await loadLocal();render()})();
+</script>
+</body>
+</html>
