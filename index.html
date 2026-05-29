@@ -110,6 +110,11 @@ button{
   display:inline-flex;align-items:center;gap:6px;background:#ffffff20;border:1px solid #ffffff30;
   padding:7px 10px;border-radius:999px;margin-top:10px;font-weight:900;color:#fff;
 }
+.sync-status{
+  margin-top:8px;border:1px solid #ffffff30;background:#ffffff18;color:#e0f2fe;
+  display:inline-flex;gap:6px;align-items:center;padding:7px 10px;border-radius:999px;
+  font-weight:900;font-size:12px;
+}
 .toast{position:fixed;left:14px;right:14px;bottom:92px;z-index:120;display:none;justify-content:center}
 .toast.show{display:flex;animation:fadeIn .2s ease}
 .toast span{background:#0f172a;color:white;padding:13px 16px;border-radius:18px;font-weight:900;box-shadow:0 18px 50px #02061744}
@@ -154,6 +159,7 @@ button{
   <h1>Input Penjualan</h1>
   <p data-brand></p>
   <div class="operator-badge" id="operatorBadge">Operator: -</div>
+  <div class="sync-status" id="syncStatus">IndexedDB + Firebase siap</div>
 </header>
 
 <main class="wrap">
@@ -222,6 +228,90 @@ const DEFAULT_ITEMS={
 };
 const DEFAULT_THEME={brand:'Bubur Ayam Bandung Akang Hamzah',bg:'#f4f7fb',card:'#ffffff',text:'#0f172a',primary:'#1e3a8a',accent:'#2563eb',success:'#15803d',danger:'#b91c1c'};
 const DEFAULT_OPERATORS=['Akang Hamzah','Operator 1','Operator 2'];
+
+const FIREBASE_URL='https://bubur-60a27-default-rtdb.asia-southeast1.firebasedatabase.app';
+const DB_NAME='bubur_akang_hamzah_db';
+const DB_VERSION=1;
+let dbPromise=null;
+
+
+function openDB(){
+  if(dbPromise)return dbPromise;
+  dbPromise=new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,DB_VERSION);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('laporan')){
+        const s=db.createObjectStore('laporan',{keyPath:'id'});
+        s.createIndex('tanggal','tanggal',{unique:false});
+        s.createIndex('synced','synced',{unique:false});
+      }
+      if(!db.objectStoreNames.contains('settings')){
+        db.createObjectStore('settings',{keyPath:'key'});
+      }
+    };
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+  return dbPromise;
+}
+async function idbPut(storeName,value){
+  const db=await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(storeName,'readwrite');
+    tx.objectStore(storeName).put(value);
+    tx.oncomplete=()=>resolve(true);
+    tx.onerror=()=>reject(tx.error);
+  });
+}
+async function idbGetAll(storeName){
+  const db=await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(storeName,'readonly');
+    const req=tx.objectStore(storeName).getAll();
+    req.onsuccess=()=>resolve(req.result||[]);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function saveTransactionIDB(d){
+  await idbPut('laporan',d);
+  return d;
+}
+async function syncToFirebase(d){
+  if(!navigator.onLine)throw new Error('offline');
+  const path=`/laporan/${encodeURIComponent(d.tanggal)}/${encodeURIComponent(d.id)}.json`;
+  const syncedAt=new Date().toISOString();
+  const payload={...d,synced:true,syncedAt};
+  const res=await fetch(FIREBASE_URL+path,{
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  });
+  if(!res.ok)throw new Error('Firebase gagal: '+res.status);
+  await idbPut('laporan',payload);
+  return payload;
+}
+async function syncPending(){
+  try{
+    const all=await idbGetAll('laporan');
+    const pending=all.filter(x=>!x.synced);
+    if(!pending.length){setSyncStatus('Semua data tersinkron');return}
+    setSyncStatus(`Sinkron ${pending.length} data...`);
+    for(const d of pending){
+      try{await syncToFirebase(d)}catch(e){}
+    }
+    const left=(await idbGetAll('laporan')).filter(x=>!x.synced).length;
+    setSyncStatus(left?`${left} data menunggu internet`:'Semua data tersinkron');
+  }catch(e){
+    setSyncStatus('IndexedDB belum siap');
+  }
+}
+function setSyncStatus(text){
+  const el=document.getElementById('syncStatus');
+  if(el)el.textContent=text;
+}
+window.addEventListener('online',syncPending);
+window.getLaporanIDB=async()=>await idbGetAll('laporan');
 
 function today(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}
 
@@ -357,7 +447,7 @@ function buatData(){
   let produk=ambilKel('produk'),extra=ambilKel('extra'),minuman=ambilKel('minuman');
   let total=[...produk,...extra,...minuman].reduce((a,b)=>a+b.total,0);
   return {
-    id:Date.now(),
+    id:String(Date.now())+'_'+Math.random().toString(36).slice(2,8),
     waktu:new Date().toLocaleString('id-ID'),
     tanggal:tanggal.value,
     operator:operator.value||'',
@@ -452,15 +542,25 @@ function tampilToast(pesan){
   clearTimeout(window.toastTimer);
   window.toastTimer=setTimeout(()=>toast.classList.remove('show'),2200);
 }
-function simpan(noAlert=false){
-  let d=buatData();
-  let key='laporan_'+d.tanggal;
-  let arr=safeJSON(key,[]);
-  if(!Array.isArray(arr))arr=[arr];
-  arr.push(d);
-  localStorage.setItem(key,JSON.stringify(arr));
-  if(!noAlert)tampilToast('Transaksi berhasil tersimpan');
-  resetForm();updateHari();
+async function simpan(noAlert=false){
+  let d={...buatData(),synced:false,createdAt:new Date().toISOString()};
+  try{
+    setSyncStatus('Menyimpan ke IndexedDB...');
+    await saveTransactionIDB(d);
+    setSyncStatus('Tersimpan lokal, sinkron Firebase...');
+    try{
+      await syncToFirebase(d);
+      if(!noAlert)tampilToast('Transaksi tersimpan di IndexedDB & Firebase');
+      setSyncStatus('Tersimpan di IndexedDB + Firebase');
+    }catch(e){
+      if(!noAlert)tampilToast('Tersimpan di HP. Firebase menunggu internet.');
+      setSyncStatus('Tersimpan lokal, Firebase tertunda');
+    }
+    resetForm();updateHari();
+  }catch(e){
+    tampilToast('Gagal menyimpan: '+(e.message||e));
+    setSyncStatus('Gagal menyimpan');
+  }
 }
 function resetForm(){
   document.querySelectorAll('input[type=number]:not([readonly])').forEach(x=>{x.value='0';markZero(x)});
@@ -469,10 +569,10 @@ function resetForm(){
   catatan.value='';
   hitung();
 }
-function kirimWA(){
+async function kirimWA(){
   let d=buatData();
-  simpan(true);
-  let txt=`*LAPORAN PENJUALAN*\nTanggal: ${d.tanggal}\nWaktu: ${d.waktu}\nOperator: ${d.operator||'-'}\n\n`;
+  await simpan(true);
+  let txt=`*LAPORAN PENJUALAN*\n\nHari : ${namaHari(d.tanggal)}\nTanggal : ${d.tanggal}\nWaktu : ${d.waktu}\nOperator : ${d.operator||'-'}\n\n`;
   [['produk',label('produk','Penjualan Bubur')],['extra',label('extra','Extra Topping')],['minuman',label('minuman','Minuman / Lainnya')]].forEach(([k,judul])=>{
     let ada=d[k].filter(x=>x.jumlah>0);
     txt+=`*${judul}*\n`+(ada.length?ada.map(x=>`${x.nama} ${x.jumlah} = ${rp(x.total)}`).join('\n'):'-')+'\n\n';
@@ -483,11 +583,19 @@ function kirimWA(){
   }
   let kurang=d.kurang.filter(x=>x.kurang);
   if(kurang.length)txt+='*BARANG KURANG*\n'+kurang.map(x=>'- '+x.nama).join('\n')+'\n\n';
+  if(d.catatan){
+    txt+=`━━━━━━━━━━
+*CATATAN*
+━━━━━━━━━━
+${d.catatan}
+
+`;
+  }
   txt+=`*TOTAL: ${rp(d.total)}*`;
-  if(d.catatan)txt+=`\nCatatan: ${d.catatan}`;
   tampilToast('Transaksi tersimpan, WhatsApp dibuka');
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
 }
+openDB().then(()=>syncPending()).catch(()=>setSyncStatus('IndexedDB tidak tersedia'));
 render();
 </script>
 </body>
