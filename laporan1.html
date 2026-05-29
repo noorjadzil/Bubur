@@ -139,9 +139,10 @@ button{border:0;border-radius:16px;padding:12px 13px;font-weight:1000;cursor:poi
 .share-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
 .share-actions button{margin:0}
 .shot-stage{position:fixed;left:-99999px;top:0;background:#fff;padding:0;z-index:-1}
-.wa-shot{width:1200px;background:#f8fafc;color:#0f172a;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;padding:34px;border-radius:0}
+.shot-stage{position:fixed;left:-99999px;top:0;background:#f8fafc;z-index:-1}
+.wa-shot{width:1760px;background:#f8fafc;color:#0f172a;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;padding:34px;border-radius:0}
 .wa-shot-head{background:linear-gradient(135deg,#0f172a,#1e3a8a 58%,#2563eb);color:#fff;border-radius:30px;padding:28px;box-shadow:0 18px 45px #0f172a22}
-.wa-shot-title{font-size:34px;font-weight:1000;margin:0}.wa-shot-brand{font-size:19px;font-weight:900;color:#dbeafe;margin-top:6px}.wa-shot-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.wa-shot-stat{background:#ffffff22;border:1px solid #ffffff36;border-radius:20px;padding:16px}.wa-shot-stat span{display:block;font-size:15px;color:#dbeafe;font-weight:900}.wa-shot-stat b{display:block;font-size:25px;margin-top:5px}.wa-shot-card{margin-top:22px;background:#fff;border:1px solid #dbe3ef;border-radius:24px;padding:20px;box-shadow:0 12px 32px #0f172a12}.wa-shot-card h3{margin:0 0 14px;font-size:24px}.wa-shot-table{width:100%;border-collapse:separate;border-spacing:0;font-size:15px;overflow:hidden;border-radius:18px;border:1px solid #dbe3ef}.wa-shot-table th,.wa-shot-table td{border-right:1px solid #e5eaf3;border-bottom:1px solid #e5eaf3;padding:10px;text-align:center}.wa-shot-table th{background:#eef2ff;color:#1e3a8a;font-weight:1000}.wa-shot-table .item{text-align:left;min-width:190px;background:#fff;font-weight:1000}.wa-shot-table .price{font-size:12px;color:#64748b;font-weight:800;margin-top:3px}.wa-shot-table .has{background:#f8fafc;color:#1e3a8a;font-weight:1000}.wa-shot-table .total{background:#f8fafc;color:#1e3a8a;font-weight:1000}.wa-shot-foot{margin-top:14px;color:#64748b;font-weight:800;font-size:15px;text-align:right}
+.wa-shot-title{font-size:34px;font-weight:1000;margin:0}.wa-shot-brand{font-size:19px;font-weight:900;color:#dbeafe;margin-top:6px}.wa-shot-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.wa-shot-stat{background:#ffffff22;border:1px solid #ffffff36;border-radius:20px;padding:16px}.wa-shot-stat span{display:block;font-size:15px;color:#dbeafe;font-weight:900}.wa-shot-stat b{display:block;font-size:25px;margin-top:5px}.wa-shot-card{margin-top:22px;background:#fff;border:1px solid #dbe3ef;border-radius:24px;padding:20px;box-shadow:0 12px 32px #0f172a12;overflow:visible}.wa-shot-card h3{margin:0 0 14px;font-size:24px}.wa-shot-table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:13px;overflow:hidden;border-radius:18px;border:1px solid #dbe3ef}.wa-shot-table th,.wa-shot-table td{border-right:1px solid #e5eaf3;border-bottom:1px solid #e5eaf3;padding:7px 4px;text-align:center;white-space:nowrap;line-height:1.2}.wa-shot-table th{background:#eef2ff;color:#1e3a8a;font-weight:1000}.wa-shot-table .item{text-align:left;background:#fff;font-weight:1000;white-space:normal;padding-left:9px}.wa-shot-table .price{font-size:10px;color:#64748b;font-weight:800;margin-top:2px}.wa-shot-table .has{background:#f8fafc;color:#1e3a8a;font-weight:1000}.wa-shot-table .total{background:#f8fafc;color:#1e3a8a;font-weight:1000;font-size:12px}.wa-shot-foot{margin-top:14px;color:#64748b;font-weight:800;font-size:15px;text-align:right}
 @media(min-width:390px){.share-actions{grid-template-columns:1fr 1fr}.share-actions .wide{grid-column:1/-1}}
 
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -263,7 +264,9 @@ function elemenGambarKalender(){
   if(!r.active.length)return null;
   const brand=(getTheme().brand||DEFAULT_THEME.brand);
   const last=new Date(+r.ym.slice(0,4),+r.ym.slice(5,7),0).getDate();
-  const dayHeaders=Array.from({length:last},(_,i)=>`<th>${i+1}</th>`).join('');
+  const shotWidth=Math.max(1760, 410 + (last*42) + 220);
+  const dayHeaders=Array.from({length:last},(_,i)=>`<th class="dayh">${i+1}</th>`).join('');
+  const colgroup=`<col style="width:210px">${Array.from({length:last},()=>'<col style="width:42px">').join('')}<col style="width:78px"><col style="width:170px">`;
   const rows=r.active.map(([n,m])=>{
     const cells=Array.from({length:last},(_,i)=>{
       const d=String(i+1), v=m.days[d]||'';
@@ -273,7 +276,7 @@ function elemenGambarKalender(){
   }).join('');
   const wrap=document.createElement('div');
   wrap.className='shot-stage';
-  wrap.innerHTML=`<div class="wa-shot" id="waShotKalender">
+  wrap.innerHTML=`<div class="wa-shot" id="waShotKalender" style="width:${shotWidth}px">
     <div class="wa-shot-head">
       <h2 class="wa-shot-title">Kalender Penjualan</h2>
       <div class="wa-shot-brand">${esc(brand)} • ${esc(formatBulanIndo(r.ym))}</div>
@@ -285,7 +288,7 @@ function elemenGambarKalender(){
     </div>
     <div class="wa-shot-card">
       <h3>Rincian per Tanggal</h3>
-      <table class="wa-shot-table"><tr><th>Item</th>${dayHeaders}<th>Total</th><th>Uang</th></tr>${rows}</table>
+      <table class="wa-shot-table">${colgroup}<tr><th>Item</th>${dayHeaders}<th>Total</th><th>Uang</th></tr>${rows}</table>
       <div class="wa-shot-foot">Dibuat otomatis dari aplikasi • ${new Date().toLocaleString('id-ID',{dateStyle:'full',timeStyle:'short'})}</div>
     </div>
   </div>`;
@@ -298,7 +301,7 @@ async function blobGambarKalender(){
   if(!wrap){toast('Belum ada data bulan ini');return null}
   try{
     const target=wrap.querySelector('#waShotKalender');
-    const canvas=await html2canvas(target,{backgroundColor:'#f8fafc',scale:2,useCORS:true});
+    const canvas=await html2canvas(target,{backgroundColor:'#f8fafc',scale:2,useCORS:true,width:target.scrollWidth,height:target.scrollHeight,windowWidth:target.scrollWidth,windowHeight:target.scrollHeight});
     return await new Promise(resolve=>canvas.toBlob(resolve,'image/png',0.96));
   }finally{wrap.remove()}
 }
