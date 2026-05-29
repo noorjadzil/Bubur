@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Laporan Penjualan</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 :root{
   --bg:#f4f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;
@@ -134,6 +135,15 @@ button{border:0;border-radius:16px;padding:12px 13px;font-weight:1000;cursor:poi
 }
 .month-item b{font-size:13px}.month-item .meta{font-size:12px;color:var(--muted);font-weight:800;margin-top:3px}
 .month-item .amount{text-align:right;color:var(--primary);font-weight:1000}
+
+.share-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+.share-actions button{margin:0}
+.shot-stage{position:fixed;left:-99999px;top:0;background:#fff;padding:0;z-index:-1}
+.wa-shot{width:1200px;background:#f8fafc;color:#0f172a;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;padding:34px;border-radius:0}
+.wa-shot-head{background:linear-gradient(135deg,#0f172a,#1e3a8a 58%,#2563eb);color:#fff;border-radius:30px;padding:28px;box-shadow:0 18px 45px #0f172a22}
+.wa-shot-title{font-size:34px;font-weight:1000;margin:0}.wa-shot-brand{font-size:19px;font-weight:900;color:#dbeafe;margin-top:6px}.wa-shot-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.wa-shot-stat{background:#ffffff22;border:1px solid #ffffff36;border-radius:20px;padding:16px}.wa-shot-stat span{display:block;font-size:15px;color:#dbeafe;font-weight:900}.wa-shot-stat b{display:block;font-size:25px;margin-top:5px}.wa-shot-card{margin-top:22px;background:#fff;border:1px solid #dbe3ef;border-radius:24px;padding:20px;box-shadow:0 12px 32px #0f172a12}.wa-shot-card h3{margin:0 0 14px;font-size:24px}.wa-shot-table{width:100%;border-collapse:separate;border-spacing:0;font-size:15px;overflow:hidden;border-radius:18px;border:1px solid #dbe3ef}.wa-shot-table th,.wa-shot-table td{border-right:1px solid #e5eaf3;border-bottom:1px solid #e5eaf3;padding:10px;text-align:center}.wa-shot-table th{background:#eef2ff;color:#1e3a8a;font-weight:1000}.wa-shot-table .item{text-align:left;min-width:190px;background:#fff;font-weight:1000}.wa-shot-table .price{font-size:12px;color:#64748b;font-weight:800;margin-top:3px}.wa-shot-table .has{background:#f8fafc;color:#1e3a8a;font-weight:1000}.wa-shot-table .total{background:#f8fafc;color:#1e3a8a;font-weight:1000}.wa-shot-foot{margin-top:14px;color:#64748b;font-weight:800;font-size:15px;text-align:right}
+@media(min-width:390px){.share-actions{grid-template-columns:1fr 1fr}.share-actions .wide{grid-column:1/-1}}
+
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:380px){
@@ -216,6 +226,107 @@ function renderHarian(){const data=filtered();let groups={};data.forEach(d=>{gro
 function dataKalenderBulanan(){
   const data=filtered(), items=getItems(), order=[...(items.produk||[]),...(items.extra||[]),...(items.minuman||[])];
   const ym=bulan.value;
+  let map={};
+  order.forEach(i=>map[i.nama]={harga:+i.harga||0,days:{},qty:0,total:0});
+  data.forEach(d=>flat(d).forEach(x=>{
+    if(!map[x.nama])map[x.nama]={harga:+x.harga||0,days:{},qty:0,total:0};
+    const day=String(+String(d.tanggal||'').slice(8,10));
+    const qty=+x.jumlah||0, total=qty*(+x.harga||0);
+    map[x.nama].days[day]=(map[x.nama].days[day]||0)+qty;
+    map[x.nama].qty+=qty;
+    map[x.nama].total+=total;
+  }));
+  const active=Object.entries(map).filter(([n,m])=>m.qty>0||m.total>0);
+  return {data,ym,active,totalUang:active.reduce((a,[n,m])=>a+m.total,0),totalQty:active.reduce((a,[n,m])=>a+m.qty,0)};
+}
+function formatBulanIndo(ym){
+  const bulanIndo=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const [y,m]=String(ym||'').split('-');
+  return `${bulanIndo[(+m||1)-1]||m} ${y||''}`.trim();
+}
+function kirimWAKalenderBulanan(){
+  const r=dataKalenderBulanan();
+  if(!r.active.length){toast('Belum ada data bulan ini');return}
+  const brand=(getTheme().brand||DEFAULT_THEME.brand);
+  const tanggalCetak=new Date().toLocaleString('id-ID',{dateStyle:'full',timeStyle:'short'});
+  const detail=r.active.map(([n,m],i)=>{
+    const days=Object.entries(m.days).filter(([d,v])=>+v>0).map(([d,v])=>`${d}:${v}`).join(', ');
+    return `${i+1}. ${n}\n   Terjual: ${m.qty} x ${rp(m.harga)} = ${rp(m.total)}\n   Tgl: ${days}`;
+  }).join('\n\n');
+  const teks=`*Laporan Penjualan*\n${brand}\n\n*Kalender Penjualan Bulan ${formatBulanIndo(r.ym)}*\nDicetak: ${tanggalCetak}\n\nTotal transaksi: ${r.data.length}\nTotal item terjual: ${r.totalQty}\nTotal uang: ${rp(r.totalUang)}\n\n*Rincian Item*\n${detail}\n\n_Ini adalah laporan otomatis dari aplikasi._`;
+  window.open('https://wa.me/?text='+encodeURIComponent(teks),'_blank');
+}
+
+
+function elemenGambarKalender(){
+  const r=dataKalenderBulanan();
+  if(!r.active.length)return null;
+  const brand=(getTheme().brand||DEFAULT_THEME.brand);
+  const last=new Date(+r.ym.slice(0,4),+r.ym.slice(5,7),0).getDate();
+  const dayHeaders=Array.from({length:last},(_,i)=>`<th>${i+1}</th>`).join('');
+  const rows=r.active.map(([n,m])=>{
+    const cells=Array.from({length:last},(_,i)=>{
+      const d=String(i+1), v=m.days[d]||'';
+      return `<td class="${v?'has':''}">${v||''}</td>`;
+    }).join('');
+    return `<tr><td class="item">${esc(n)}<div class="price">${rp(m.harga)}</div></td>${cells}<td class="total">${m.qty}</td><td class="total">${rp(m.total)}</td></tr>`;
+  }).join('');
+  const wrap=document.createElement('div');
+  wrap.className='shot-stage';
+  wrap.innerHTML=`<div class="wa-shot" id="waShotKalender">
+    <div class="wa-shot-head">
+      <h2 class="wa-shot-title">Kalender Penjualan</h2>
+      <div class="wa-shot-brand">${esc(brand)} • ${esc(formatBulanIndo(r.ym))}</div>
+      <div class="wa-shot-stats">
+        <div class="wa-shot-stat"><span>Total Uang</span><b>${rp(r.totalUang)}</b></div>
+        <div class="wa-shot-stat"><span>Transaksi</span><b>${r.data.length}</b></div>
+        <div class="wa-shot-stat"><span>Item Terjual</span><b>${r.totalQty}</b></div>
+      </div>
+    </div>
+    <div class="wa-shot-card">
+      <h3>Rincian per Tanggal</h3>
+      <table class="wa-shot-table"><tr><th>Item</th>${dayHeaders}<th>Total</th><th>Uang</th></tr>${rows}</table>
+      <div class="wa-shot-foot">Dibuat otomatis dari aplikasi • ${new Date().toLocaleString('id-ID',{dateStyle:'full',timeStyle:'short'})}</div>
+    </div>
+  </div>`;
+  document.body.appendChild(wrap);
+  return wrap;
+}
+async function blobGambarKalender(){
+  if(typeof html2canvas==='undefined'){toast('Library gambar belum termuat. Coba buka dengan internet.');return null}
+  const wrap=elemenGambarKalender();
+  if(!wrap){toast('Belum ada data bulan ini');return null}
+  try{
+    const target=wrap.querySelector('#waShotKalender');
+    const canvas=await html2canvas(target,{backgroundColor:'#f8fafc',scale:2,useCORS:true});
+    return await new Promise(resolve=>canvas.toBlob(resolve,'image/png',0.96));
+  }finally{wrap.remove()}
+}
+async function simpanGambarKalender(){
+  const blob=await blobGambarKalender(); if(!blob)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`kalender-penjualan-${bulan.value||today().slice(0,7)}.png`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  toast('Gambar kalender disimpan');
+}
+async function kirimWAGambarKalender(){
+  const blob=await blobGambarKalender(); if(!blob)return;
+  const file=new File([blob],`kalender-penjualan-${bulan.value||today().slice(0,7)}.png`,{type:'image/png'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:'Kalender Penjualan',text:'Kalender Penjualan '+formatBulanIndo(bulan.value)});toast('Pilih WhatsApp untuk mengirim gambar')}
+    catch(e){toast('Share gambar dibatalkan')}
+  }else{
+    await simpanGambarKalender();
+    window.open('https://wa.me/?text='+encodeURIComponent('Kalender Penjualan '+formatBulanIndo(bulan.value)+'\nGambar sudah disimpan, silakan lampirkan di WhatsApp.'),'_blank');
+    toast('Browser ini belum bisa share gambar langsung')
+  }
+}
+
+function renderBulanan(){
+  const data=filtered(), items=getItems(), order=[...(items.produk||[]),...(items.extra||[]),...(items.minuman||[])];
+  const ym=bulan.value;
   const last=new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate();
   let map={};
   order.forEach(i=>map[i.nama]={harga:+i.harga||0,days:{},qty:0,total:0});
@@ -228,83 +339,9 @@ function dataKalenderBulanan(){
     map[x.nama].total+=total;
   }));
   const active=Object.entries(map).filter(([n,m])=>m.qty>0||m.total>0);
-  return {data,ym,last,active,totalUang:active.reduce((a,[n,m])=>a+m.total,0),totalQty:active.reduce((a,[n,m])=>a+m.qty,0)};
-}
-function formatBulanIndo(ym){
-  const bulanIndo=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-  const [y,m]=String(ym||'').split('-');
-  return `${bulanIndo[(+m||1)-1]||m} ${y||''}`.trim();
-}
-function waTableText(r){
-  const brand=(getTheme().brand||DEFAULT_THEME.brand);
-  const widthName=Math.max(12,...r.active.map(([n])=>n.length));
-  const garis='─'.repeat(widthName+26);
-  const row=(a,b,c)=>`${String(a).padEnd(widthName,' ')} | ${String(b).padStart(4,' ')} | ${String(c).padStart(13,' ')}`;
-  const rows=r.active.map(([n,m])=>row(n.slice(0,widthName),m.qty,rp(m.total))).join('\n');
-  return `📊 LAPORAN PENJUALAN\n${brand}\n${formatBulanIndo(r.ym)}\n\n${row('Item','Qty','Total')}\n${garis}\n${rows}\n${garis}\n${row('TOTAL',r.totalQty,rp(r.totalUang))}\n\nTransaksi: ${r.data.length}`;
-}
-function kirimWATabelBulanan(){
-  const r=dataKalenderBulanan();
-  if(!r.active.length){toast('Belum ada data bulan ini');return}
-  window.open('https://wa.me/?text='+encodeURIComponent('```\n'+waTableText(r)+'\n```'),'_blank');
-}
-function drawReportCanvas(){
-  const r=dataKalenderBulanan();
-  if(!r.active.length){toast('Belum ada data bulan ini');return null}
-  const brand=(getTheme().brand||DEFAULT_THEME.brand);
-  const cellW=38, nameW=190, totalW=82, moneyW=140, rowH=34, headH=190;
-  const w=nameW+(cellW*r.last)+totalW+moneyW+40;
-  const h=headH+rowH*(r.active.length+1)+96;
-  const c=document.createElement('canvas'); c.width=w*2; c.height=h*2;
-  const ctx=c.getContext('2d'); ctx.scale(2,2);
-  ctx.fillStyle='#f8fafc'; ctx.fillRect(0,0,w,h);
-  ctx.fillStyle='#0f172a'; roundRect(ctx,20,20,w-40,126,26,true,false);
-  const grd=ctx.createLinearGradient(20,20,w-20,146); grd.addColorStop(0,'#0f172a'); grd.addColorStop(.58,'#1e3a8a'); grd.addColorStop(1,'#2563eb'); ctx.fillStyle=grd; roundRect(ctx,20,20,w-40,126,26,true,false);
-  ctx.fillStyle='#dbeafe'; ctx.font='700 20px Arial'; ctx.fillText(brand,44,58);
-  ctx.fillStyle='#ffffff'; ctx.font='900 34px Arial'; ctx.fillText('Kalender Penjualan '+formatBulanIndo(r.ym),44,100);
-  ctx.font='800 22px Arial'; ctx.fillText(rp(r.totalUang),44,132);
-  ctx.fillStyle='#e0e7ff'; ctx.font='700 18px Arial'; ctx.fillText(`Transaksi ${r.data.length} • Item ${r.totalQty}`,w-310,132);
-  const x0=20,y0=170;
-  ctx.fillStyle='#e0e7ff'; roundRect(ctx,x0,y0,w-40,rowH,14,true,false);
-  ctx.fillStyle='#1e3a8a'; ctx.font='900 15px Arial'; ctx.fillText('Item',x0+14,y0+22);
-  for(let i=1;i<=r.last;i++){ctx.fillText(String(i),x0+nameW+(i-1)*cellW+12,y0+22)}
-  ctx.fillText('Total',x0+nameW+r.last*cellW+15,y0+22); ctx.fillText('Uang',x0+nameW+r.last*cellW+totalW+16,y0+22);
-  ctx.strokeStyle='#dbe3ef'; ctx.lineWidth=1;
-  r.active.forEach(([n,m],idx)=>{
-    const y=y0+rowH*(idx+1);
-    ctx.fillStyle=idx%2?'#ffffff':'#f8fafc'; ctx.fillRect(x0,y,w-40,rowH);
-    ctx.strokeRect(x0,y,w-40,rowH);
-    ctx.fillStyle='#0f172a'; ctx.font='900 14px Arial'; ctx.fillText(n,x0+12,y+21);
-    ctx.fillStyle='#1e3a8a'; ctx.font='900 14px Arial';
-    for(let i=1;i<=r.last;i++){const v=m.days[String(i)]||''; if(v) ctx.fillText(String(v),x0+nameW+(i-1)*cellW+12,y+21)}
-    ctx.fillText(String(m.qty),x0+nameW+r.last*cellW+24,y+21);
-    ctx.fillText(rp(m.total),x0+nameW+r.last*cellW+totalW+8,y+21);
-  });
-  const fy=y0+rowH*(r.active.length+1)+26;
-  ctx.fillStyle='#64748b'; ctx.font='700 15px Arial'; ctx.fillText('Dibuat otomatis dari aplikasi laporan penjualan.',24,fy);
-  return c;
-}
-function roundRect(ctx,x,y,w,h,r,fill,stroke){
-  ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();if(fill)ctx.fill();if(stroke)ctx.stroke();
-}
-function downloadCanvas(filename){
-  const c=drawReportCanvas(); if(!c)return;
-  const a=document.createElement('a'); a.download=filename; a.href=c.toDataURL('image/png'); a.click();
-}
-function simpanGambarKalender(){downloadCanvas('kalender-penjualan-'+bulan.value+'.png');toast('Gambar kalender dibuat')}
-function exportPDFKalender(){
-  const c=drawReportCanvas(); if(!c)return;
-  const img=c.toDataURL('image/png');
-  const w=window.open('','_blank');
-  w.document.write(`<!doctype html><html><head><title>PDF Kalender Penjualan</title><style>body{margin:0;background:#f8fafc;font-family:Arial}.bar{padding:12px;text-align:center}.bar button{padding:12px 18px;border:0;border-radius:12px;background:#1e3a8a;color:white;font-weight:800}img{width:100%;display:block}</style></head><body><div class="bar"><button onclick="print()">Simpan / Cetak PDF</button></div><img src="${img}"></body></html>`);
-  w.document.close();
-  toast('Halaman PDF dibuka');
-}
-function kirimWAKalenderBulanan(){kirimWATabelBulanan()}
-
-function renderBulanan(){
-  const r=dataKalenderBulanan(), active=r.active, data=r.data, ym=r.ym, last=r.last;
-  const totalUang=r.totalUang, totalQty=r.totalQty, totalTrx=data.length;
+  const totalUang=active.reduce((a,[n,m])=>a+m.total,0);
+  const totalQty=active.reduce((a,[n,m])=>a+m.qty,0);
+  const totalTrx=data.length;
   const dayHeaders=Array.from({length:last},(_,i)=>`<th>${i+1}</th>`).join('');
   const rows=active.map(([n,m])=>{
     const cells=Array.from({length:last},(_,i)=>{
@@ -332,10 +369,13 @@ function renderBulanan(){
       </div>
     </div>
     <div class="month-note">Geser tabel ke kanan untuk melihat tanggal 1–${last}. Kolom kiri item dibuat tetap agar lebih mudah dibaca di HP.</div>
-    <div class="row" style="margin-top:10px"><button class="green" onclick="kirimWATabelBulanan()">Kirim WA Tabel</button><button class="primary" onclick="simpanGambarKalender()">Simpan Gambar</button></div>
-    <button class="ghost" onclick="exportPDFKalender()">Export PDF</button>
+    <div class="share-actions">
+      <button class="green" onclick="kirimWAKalenderBulanan()">Kirim WA Teks</button>
+      <button class="primary" onclick="kirimWAGambarKalender()">Kirim WA Gambar</button>
+      <button class="ghost wide" onclick="simpanGambarKalender()">Simpan Gambar Kalender</button>
+    </div>
   </section>
-  <section class="card" id="calendarCapture">
+  <section class="card">
     <div class="section-title"><b>Kalender Penjualan</b><span class="pill">${esc(ym)}</span></div>
     <div class="calendar-wrap"><table class="calendar-table">
       <tr><th class="item-col">Item</th>${dayHeaders}<th>Total</th><th>Uang</th></tr>
