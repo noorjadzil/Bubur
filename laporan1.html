@@ -212,7 +212,8 @@ function summary(data){const total=data.reduce((a,b)=>a+(+b.total||0),0),trx=dat
 function transactionCard(d,idx){const rows=flat(d).filter(x=>+x.jumlah>0).map(x=>`<div class="line"><b>${esc(x.nama)}</b><span>${x.jumlah} × ${rp(x.harga)}</span><span class="rpv">${rp(x.total)}</span></div>`).join('')||'<div class="empty" style="padding:12px">Tidak ada item terjual</div>';const kurang=(d.kurang||[]).filter(x=>x.kurang||x.status==='kurang').map(x=>esc(x.nama)).join(', ');return `<div class="trx"><div class="trx-head"><div><div class="trx-title">Transaksi ${idx+1}</div><div class="trx-meta">${esc(d.tanggal||'')} • ${esc(d.waktu||'')} • ${esc(d.operator||'-')}</div></div><div class="pill">${rp(d.total)}</div></div><div class="list">${rows}</div>${kurang?`<p class="small"><b>Barang kurang:</b> ${kurang}</p>`:''}${d.catatan?`<p class="small"><b>Catatan:</b> ${esc(d.catatan)}</p>`:''}<div class="trx-actions"><button class="mini primary" onclick="openEdit(${d.id})">Edit</button><button class="mini red" onclick="confirmDeleteTrx(${d.id})">Hapus</button></div></div>`}
 function renderTransaksi(){const data=filtered().sort((a,b)=>(b.id||0)-(a.id||0));out.innerHTML=summary(data)+`<section class="card"><div class="section-title"><b>Daftar Transaksi</b><span class="pill">${esc(tanggal.value)}</span></div>${data.length?data.map(transactionCard).join(''):'<div class="empty">Belum ada transaksi pada tanggal ini.</div>'}</section>`}
 function renderHarian(){const data=filtered();let groups={};data.forEach(d=>{groups[d.tanggal]=groups[d.tanggal]||[];groups[d.tanggal].push(d)});let dates=Object.keys(groups).sort();let html=dates.map(date=>{const arr=groups[date],total=arr.reduce((a,b)=>a+(+b.total||0),0),qty=arr.reduce((a,d)=>a+flat(d).reduce((x,y)=>x+(+y.jumlah||0),0),0);return `<div class="trx"><div class="trx-head"><div><div class="trx-title">${esc(date)}</div><div class="trx-meta">${arr.length} transaksi • ${qty} item</div></div><div class="pill">${rp(total)}</div></div><div class="trx-actions"><button class="mini primary" onclick="tanggal.value='${date}';setMode('transaksi')">Lihat Transaksi</button><button class="mini red" onclick="deleteDay('${date}')">Hapus Hari Ini</button></div></div>`}).join('');out.innerHTML=summary(data)+`<section class="card"><div class="section-title"><b>Laporan Harian</b><span class="pill">Hanya tanggal yang ada data</span></div>${html||'<div class="empty">Belum ada data pada bulan ini.</div>'}</section>`}
-function renderBulanan(){
+
+function dataKalenderBulanan(){
   const data=filtered(), items=getItems(), order=[...(items.produk||[]),...(items.extra||[]),...(items.minuman||[])];
   const ym=bulan.value;
   const last=new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate();
@@ -227,9 +228,83 @@ function renderBulanan(){
     map[x.nama].total+=total;
   }));
   const active=Object.entries(map).filter(([n,m])=>m.qty>0||m.total>0);
-  const totalUang=active.reduce((a,[n,m])=>a+m.total,0);
-  const totalQty=active.reduce((a,[n,m])=>a+m.qty,0);
-  const totalTrx=data.length;
+  return {data,ym,last,active,totalUang:active.reduce((a,[n,m])=>a+m.total,0),totalQty:active.reduce((a,[n,m])=>a+m.qty,0)};
+}
+function formatBulanIndo(ym){
+  const bulanIndo=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const [y,m]=String(ym||'').split('-');
+  return `${bulanIndo[(+m||1)-1]||m} ${y||''}`.trim();
+}
+function waTableText(r){
+  const brand=(getTheme().brand||DEFAULT_THEME.brand);
+  const widthName=Math.max(12,...r.active.map(([n])=>n.length));
+  const garis='─'.repeat(widthName+26);
+  const row=(a,b,c)=>`${String(a).padEnd(widthName,' ')} | ${String(b).padStart(4,' ')} | ${String(c).padStart(13,' ')}`;
+  const rows=r.active.map(([n,m])=>row(n.slice(0,widthName),m.qty,rp(m.total))).join('\n');
+  return `📊 LAPORAN PENJUALAN\n${brand}\n${formatBulanIndo(r.ym)}\n\n${row('Item','Qty','Total')}\n${garis}\n${rows}\n${garis}\n${row('TOTAL',r.totalQty,rp(r.totalUang))}\n\nTransaksi: ${r.data.length}`;
+}
+function kirimWATabelBulanan(){
+  const r=dataKalenderBulanan();
+  if(!r.active.length){toast('Belum ada data bulan ini');return}
+  window.open('https://wa.me/?text='+encodeURIComponent('```\n'+waTableText(r)+'\n```'),'_blank');
+}
+function drawReportCanvas(){
+  const r=dataKalenderBulanan();
+  if(!r.active.length){toast('Belum ada data bulan ini');return null}
+  const brand=(getTheme().brand||DEFAULT_THEME.brand);
+  const cellW=38, nameW=190, totalW=82, moneyW=140, rowH=34, headH=190;
+  const w=nameW+(cellW*r.last)+totalW+moneyW+40;
+  const h=headH+rowH*(r.active.length+1)+96;
+  const c=document.createElement('canvas'); c.width=w*2; c.height=h*2;
+  const ctx=c.getContext('2d'); ctx.scale(2,2);
+  ctx.fillStyle='#f8fafc'; ctx.fillRect(0,0,w,h);
+  ctx.fillStyle='#0f172a'; roundRect(ctx,20,20,w-40,126,26,true,false);
+  const grd=ctx.createLinearGradient(20,20,w-20,146); grd.addColorStop(0,'#0f172a'); grd.addColorStop(.58,'#1e3a8a'); grd.addColorStop(1,'#2563eb'); ctx.fillStyle=grd; roundRect(ctx,20,20,w-40,126,26,true,false);
+  ctx.fillStyle='#dbeafe'; ctx.font='700 20px Arial'; ctx.fillText(brand,44,58);
+  ctx.fillStyle='#ffffff'; ctx.font='900 34px Arial'; ctx.fillText('Kalender Penjualan '+formatBulanIndo(r.ym),44,100);
+  ctx.font='800 22px Arial'; ctx.fillText(rp(r.totalUang),44,132);
+  ctx.fillStyle='#e0e7ff'; ctx.font='700 18px Arial'; ctx.fillText(`Transaksi ${r.data.length} • Item ${r.totalQty}`,w-310,132);
+  const x0=20,y0=170;
+  ctx.fillStyle='#e0e7ff'; roundRect(ctx,x0,y0,w-40,rowH,14,true,false);
+  ctx.fillStyle='#1e3a8a'; ctx.font='900 15px Arial'; ctx.fillText('Item',x0+14,y0+22);
+  for(let i=1;i<=r.last;i++){ctx.fillText(String(i),x0+nameW+(i-1)*cellW+12,y0+22)}
+  ctx.fillText('Total',x0+nameW+r.last*cellW+15,y0+22); ctx.fillText('Uang',x0+nameW+r.last*cellW+totalW+16,y0+22);
+  ctx.strokeStyle='#dbe3ef'; ctx.lineWidth=1;
+  r.active.forEach(([n,m],idx)=>{
+    const y=y0+rowH*(idx+1);
+    ctx.fillStyle=idx%2?'#ffffff':'#f8fafc'; ctx.fillRect(x0,y,w-40,rowH);
+    ctx.strokeRect(x0,y,w-40,rowH);
+    ctx.fillStyle='#0f172a'; ctx.font='900 14px Arial'; ctx.fillText(n,x0+12,y+21);
+    ctx.fillStyle='#1e3a8a'; ctx.font='900 14px Arial';
+    for(let i=1;i<=r.last;i++){const v=m.days[String(i)]||''; if(v) ctx.fillText(String(v),x0+nameW+(i-1)*cellW+12,y+21)}
+    ctx.fillText(String(m.qty),x0+nameW+r.last*cellW+24,y+21);
+    ctx.fillText(rp(m.total),x0+nameW+r.last*cellW+totalW+8,y+21);
+  });
+  const fy=y0+rowH*(r.active.length+1)+26;
+  ctx.fillStyle='#64748b'; ctx.font='700 15px Arial'; ctx.fillText('Dibuat otomatis dari aplikasi laporan penjualan.',24,fy);
+  return c;
+}
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();if(fill)ctx.fill();if(stroke)ctx.stroke();
+}
+function downloadCanvas(filename){
+  const c=drawReportCanvas(); if(!c)return;
+  const a=document.createElement('a'); a.download=filename; a.href=c.toDataURL('image/png'); a.click();
+}
+function simpanGambarKalender(){downloadCanvas('kalender-penjualan-'+bulan.value+'.png');toast('Gambar kalender dibuat')}
+function exportPDFKalender(){
+  const c=drawReportCanvas(); if(!c)return;
+  const img=c.toDataURL('image/png');
+  const w=window.open('','_blank');
+  w.document.write(`<!doctype html><html><head><title>PDF Kalender Penjualan</title><style>body{margin:0;background:#f8fafc;font-family:Arial}.bar{padding:12px;text-align:center}.bar button{padding:12px 18px;border:0;border-radius:12px;background:#1e3a8a;color:white;font-weight:800}img{width:100%;display:block}</style></head><body><div class="bar"><button onclick="print()">Simpan / Cetak PDF</button></div><img src="${img}"></body></html>`);
+  w.document.close();
+  toast('Halaman PDF dibuka');
+}
+function kirimWAKalenderBulanan(){kirimWATabelBulanan()}
+
+function renderBulanan(){
+  const r=dataKalenderBulanan(), active=r.active, data=r.data, ym=r.ym, last=r.last;
+  const totalUang=r.totalUang, totalQty=r.totalQty, totalTrx=data.length;
   const dayHeaders=Array.from({length:last},(_,i)=>`<th>${i+1}</th>`).join('');
   const rows=active.map(([n,m])=>{
     const cells=Array.from({length:last},(_,i)=>{
@@ -257,8 +332,10 @@ function renderBulanan(){
       </div>
     </div>
     <div class="month-note">Geser tabel ke kanan untuk melihat tanggal 1–${last}. Kolom kiri item dibuat tetap agar lebih mudah dibaca di HP.</div>
+    <div class="row" style="margin-top:10px"><button class="green" onclick="kirimWATabelBulanan()">Kirim WA Tabel</button><button class="primary" onclick="simpanGambarKalender()">Simpan Gambar</button></div>
+    <button class="ghost" onclick="exportPDFKalender()">Export PDF</button>
   </section>
-  <section class="card">
+  <section class="card" id="calendarCapture">
     <div class="section-title"><b>Kalender Penjualan</b><span class="pill">${esc(ym)}</span></div>
     <div class="calendar-wrap"><table class="calendar-table">
       <tr><th class="item-col">Item</th>${dayHeaders}<th>Total</th><th>Uang</th></tr>
