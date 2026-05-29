@@ -63,8 +63,8 @@ button{border:0;border-radius:16px;padding:12px 13px;font-weight:1000;cursor:poi
 }
 .nav a{border-radius:18px;padding:11px 6px;text-align:center;text-decoration:none;font-weight:1000;color:var(--muted)}
 .nav a.on{background:linear-gradient(135deg,var(--primary),var(--accent));color:white}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;background:#eaf0fb;padding:6px;border-radius:20px}
-.tab{margin:0;background:transparent;color:var(--muted);padding:11px 4px;font-size:12px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;background:#eaf0fb;padding:6px;border-radius:20px}
+.tab{margin:0;background:transparent;color:var(--muted);padding:11px 4px;font-size:11px}
 .tab.on{background:#fff;color:var(--primary);box-shadow:0 8px 22px #0f172a10}
 .section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 .section-title b{font-size:16px}
@@ -143,6 +143,18 @@ button{border:0;border-radius:16px;padding:12px 13px;font-weight:1000;cursor:poi
 .wa-shot{width:1760px;background:#f8fafc;color:#0f172a;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;padding:34px;border-radius:0}
 .wa-shot-head{background:linear-gradient(135deg,#0f172a,#1e3a8a 58%,#2563eb);color:#fff;border-radius:30px;padding:28px;box-shadow:0 18px 45px #0f172a22}
 .wa-shot-title{font-size:34px;font-weight:1000;margin:0}.wa-shot-brand{font-size:19px;font-weight:900;color:#dbeafe;margin-top:6px}.wa-shot-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.wa-shot-stat{background:#ffffff22;border:1px solid #ffffff36;border-radius:20px;padding:16px}.wa-shot-stat span{display:block;font-size:15px;color:#dbeafe;font-weight:900}.wa-shot-stat b{display:block;font-size:25px;margin-top:5px}.wa-shot-card{margin-top:22px;background:#fff;border:1px solid #dbe3ef;border-radius:24px;padding:20px;box-shadow:0 12px 32px #0f172a12;overflow:visible}.wa-shot-card h3{margin:0 0 14px;font-size:24px}.wa-shot-table{width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:13px;overflow:hidden;border-radius:18px;border:1px solid #dbe3ef}.wa-shot-table th,.wa-shot-table td{border-right:1px solid #e5eaf3;border-bottom:1px solid #e5eaf3;padding:7px 4px;text-align:center;white-space:nowrap;line-height:1.2}.wa-shot-table th{background:#eef2ff;color:#1e3a8a;font-weight:1000}.wa-shot-table .item{text-align:left;background:#fff;font-weight:1000;white-space:normal;padding-left:9px}.wa-shot-table .price{font-size:10px;color:#64748b;font-weight:800;margin-top:2px}.wa-shot-table .has{background:#f8fafc;color:#1e3a8a;font-weight:1000}.wa-shot-table .total{background:#f8fafc;color:#1e3a8a;font-weight:1000;font-size:12px}.wa-shot-foot{margin-top:14px;color:#64748b;font-weight:800;font-size:15px;text-align:right}
+
+/* Omset harian kalender */
+.omset-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-top:12px}
+.dayname{text-align:center;font-size:10px;font-weight:1000;color:var(--muted);padding:4px 0}
+.omset-day{min-height:72px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:8px;display:flex;flex-direction:column;gap:5px;justify-content:space-between;box-shadow:0 6px 18px #0f172a08}
+.omset-day.emptyday{background:transparent;border:0;box-shadow:none}
+.omset-day.has{border-color:#bfdbfe;background:linear-gradient(180deg,#fff,#eff6ff)}
+.omset-day .tgl{font-size:12px;font-weight:1000;color:var(--text)}
+.omset-day .uang{font-size:12px;font-weight:1000;color:var(--primary);line-height:1.25}
+.omset-day .trxj{font-size:10px;color:var(--muted);font-weight:850}
+.wa-omset-table{width:100%;border-collapse:separate;border-spacing:10px;font-size:20px}.wa-omset-table th{color:#1e3a8a;font-weight:1000;padding:8px}.wa-omset-cell{height:118px;background:#fff;border:1px solid #dbe3ef;border-radius:20px;padding:14px;vertical-align:top;box-shadow:0 9px 20px #0f172a0c}.wa-omset-cell.has{background:#eff6ff;border-color:#bfdbfe}.wa-omset-cell .d{font-weight:1000}.wa-omset-cell .m{font-size:19px;color:#1e3a8a;font-weight:1000;margin-top:8px}.wa-omset-cell .s{font-size:13px;color:#64748b;font-weight:850;margin-top:6px}
+
 @media(min-width:390px){.share-actions{grid-template-columns:1fr 1fr}.share-actions .wide{grid-column:1/-1}}
 
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -165,6 +177,7 @@ button{border:0;border-radius:16px;padding:12px 13px;font-weight:1000;cursor:poi
       <button class="tab on" id="tabTransaksi" onclick="setMode('transaksi')">Transaksi</button>
       <button class="tab" id="tabHarian" onclick="setMode('harian')">Harian</button>
       <button class="tab" id="tabBulanan" onclick="setMode('bulanan')">Bulanan</button>
+      <button class="tab" id="tabOmset" onclick="setMode('omset')">Omset</button>
     </div>
     <div class="grid" style="margin-top:12px">
       <label id="tanggalBox">Tanggal<input type="date" id="tanggal"></label>
@@ -218,7 +231,7 @@ function monthOf(x){return (x.tanggal||'').slice(0,7)}
 function flat(d){return [...(d.produk||[]),...(d.extra||[]),...(d.minuman||[])]}
 function calcTotal(d){d.total=flat(d).reduce((a,b)=>a+(Number(b.jumlah||0)*Number(b.harga||0)),0);['produk','extra','minuman'].forEach(k=>(d[k]||[]).forEach(x=>x.total=Number(x.jumlah||0)*Number(x.harga||0)));return d}
 function filtered(){let data=ALL.slice();const query=q.value.trim().toLowerCase();if(MODE==='transaksi')data=data.filter(x=>x.tanggal===tanggal.value);else data=data.filter(x=>monthOf(x)===bulan.value);if(query)data=data.filter(d=>JSON.stringify(d).toLowerCase().includes(query));return data}
-function setMode(m){MODE=m;['Transaksi','Harian','Bulanan'].forEach(n=>document.getElementById('tab'+n).classList.toggle('on',m===n.toLowerCase()));tanggalBox.style.display=m==='transaksi'?'block':'none';bulanBox.style.display=m==='transaksi'?'none':'block';render()}
+function setMode(m){MODE=m;['Transaksi','Harian','Bulanan','Omset'].forEach(n=>document.getElementById('tab'+n).classList.toggle('on',m===n.toLowerCase()));tanggalBox.style.display=m==='transaksi'?'block':'none';bulanBox.style.display=m==='transaksi'?'none':'block';render()}
 function summary(data){const total=data.reduce((a,b)=>a+(+b.total||0),0),trx=data.length,qty=data.reduce((a,d)=>a+flat(d).reduce((x,y)=>x+(+y.jumlah||0),0),0);return `<section class="card"><div class="summary"><div class="box"><span class="small">Total uang</span><div class="num">${rp(total)}</div></div><div class="box"><span class="small">Transaksi</span><div class="num">${trx}</div></div><div class="box"><span class="small">Item terjual</span><div class="num">${qty}</div></div><div class="box"><span class="small">Status</span><div class="num" style="font-size:15px">${navigator.onLine?'Online':'Offline'}</div></div></div></section>`}
 function transactionCard(d,idx){const rows=flat(d).filter(x=>+x.jumlah>0).map(x=>`<div class="line"><b>${esc(x.nama)}</b><span>${x.jumlah} × ${rp(x.harga)}</span><span class="rpv">${rp(x.total)}</span></div>`).join('')||'<div class="empty" style="padding:12px">Tidak ada item terjual</div>';const kurang=(d.kurang||[]).filter(x=>x.kurang||x.status==='kurang').map(x=>esc(x.nama)).join(', ');return `<div class="trx"><div class="trx-head"><div><div class="trx-title">Transaksi ${idx+1}</div><div class="trx-meta">${esc(d.tanggal||'')} • ${esc(d.waktu||'')} • ${esc(d.operator||'-')}</div></div><div class="pill">${rp(d.total)}</div></div><div class="list">${rows}</div>${kurang?`<p class="small"><b>Barang kurang:</b> ${kurang}</p>`:''}${d.catatan?`<p class="small"><b>Catatan:</b> ${esc(d.catatan)}</p>`:''}<div class="trx-actions"><button class="mini primary" onclick="openEdit(${d.id})">Edit</button><button class="mini red" onclick="confirmDeleteTrx(${d.id})">Hapus</button></div></div>`}
 function renderTransaksi(){const data=filtered().sort((a,b)=>(b.id||0)-(a.id||0));out.innerHTML=summary(data)+`<section class="card"><div class="section-title"><b>Daftar Transaksi</b><span class="pill">${esc(tanggal.value)}</span></div>${data.length?data.map(transactionCard).join(''):'<div class="empty">Belum ada transaksi pada tanggal ini.</div>'}</section>`}
@@ -327,6 +340,55 @@ async function kirimWAGambarKalender(){
   }
 }
 
+
+function dataOmsetHarian(){
+  const data=filtered();
+  const ym=bulan.value;
+  const last=new Date(+ym.slice(0,4),+ym.slice(5,7),0).getDate();
+  const days={};
+  for(let i=1;i<=last;i++){const date=ym+'-'+String(i).padStart(2,'0');days[date]={date,total:0,trx:0,qty:0}}
+  data.forEach(d=>{if(!days[d.tanggal])return;days[d.tanggal].trx++;days[d.tanggal].total+=(+d.total||0);days[d.tanggal].qty+=flat(d).reduce((a,x)=>a+(+x.jumlah||0),0)});
+  const arr=Object.values(days);
+  return {ym,days:arr,total:arr.reduce((a,d)=>a+d.total,0),trx:arr.reduce((a,d)=>a+d.trx,0),qty:arr.reduce((a,d)=>a+d.qty,0),last};
+}
+function kirimWAOmsetHarian(){
+  const r=dataOmsetHarian();
+  if(!r.trx){toast('Belum ada data bulan ini');return}
+  const brand=(getTheme().brand||DEFAULT_THEME.brand);
+  const detail=r.days.filter(d=>d.total>0||d.trx>0).map(d=>`${String(+d.date.slice(8,10)).padStart(2,'0')} ${namaHari(d.date)}: ${rp(d.total)} (${d.trx} trx, ${d.qty} item)`).join('\n');
+  const teks=`*Omset Harian Bulan ${formatBulanIndo(r.ym)}*\n${brand}\n\nTotal omset: ${rp(r.total)}\nTotal transaksi: ${r.trx}\nTotal item: ${r.qty}\n\n${detail}\n\n_Ini adalah laporan otomatis dari aplikasi._`;
+  window.open('https://wa.me/?text='+encodeURIComponent(teks),'_blank');
+}
+function renderOmsetHarian(){
+  const r=dataOmsetHarian();
+  const first=new Date(r.ym+'-01').getDay();
+  const dayNames=['Ahad','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const heads=dayNames.map(x=>`<div class="dayname">${x}</div>`).join('');
+  const blanks=Array.from({length:first},()=>'<div class="omset-day emptyday"></div>').join('');
+  const cells=r.days.map(d=>`<div class="omset-day ${d.total?'has':''}" onclick="tanggal.value='${d.date}';setMode('transaksi')"><div><div class="tgl">${+d.date.slice(8,10)}</div><div class="trxj">${namaHari(d.date)}</div></div><div><div class="uang">${d.total?rp(d.total):'-'}</div><div class="trxj">${d.trx} trx • ${d.qty} item</div></div></div>`).join('');
+  out.innerHTML=`<section class="card"><div class="month-hero"><div class="label">OMSET HARIAN</div><div class="big">${rp(r.total)}</div><div class="sub"><div><span class="label">Transaksi</span><b>${r.trx}</b></div><div><span class="label">Item</span><b>${r.qty}</b></div></div></div><div class="month-note">Tiap kotak menampilkan total omset per tanggal. Tekan tanggal untuk melihat daftar transaksinya.</div><div class="share-actions"><button class="green" onclick="kirimWAOmsetHarian()">Kirim WA Teks</button><button class="primary" onclick="kirimWAGambarOmset()">Kirim WA Gambar</button><button class="ghost wide" onclick="simpanGambarOmset()">Simpan Gambar Omset</button></div></section><section class="card"><div class="section-title"><b>Kalender Omset Harian</b><span class="pill">${esc(formatBulanIndo(r.ym))}</span></div><div class="omset-grid">${heads}${blanks}${cells}</div></section>`;
+}
+function elemenGambarOmset(){
+  const r=dataOmsetHarian(); if(!r.trx)return null;
+  const brand=(getTheme().brand||DEFAULT_THEME.brand);
+  const first=new Date(r.ym+'-01').getDay();
+  const names=['Ahad','Senin','Selasa','Rabu','Kamis','Jum’at','Sabtu'];
+  let html='<tr>'+names.map(n=>`<th>${n}</th>`).join('')+'</tr><tr>';
+  for(let i=0;i<first;i++)html+='<td></td>';
+  r.days.forEach((d,idx)=>{const pos=(first+idx)%7;if(pos===0&&idx>0)html+='</tr><tr>';html+=`<td class="wa-omset-cell ${d.total?'has':''}"><div class="d">${+d.date.slice(8,10)}</div><div class="m">${d.total?rp(d.total):'-'}</div><div class="s">${d.trx} trx • ${d.qty} item</div></td>`});
+  const rest=(7-((first+r.last)%7))%7; for(let i=0;i<rest;i++)html+='<td></td>'; html+='</tr>';
+  const wrap=document.createElement('div'); wrap.className='shot-stage';
+  wrap.innerHTML=`<div class="wa-shot" id="waShotOmset" style="width:1400px"><div class="wa-shot-head"><h2 class="wa-shot-title">Omset Harian</h2><div class="wa-shot-brand">${esc(brand)} • ${esc(formatBulanIndo(r.ym))}</div><div class="wa-shot-stats"><div class="wa-shot-stat"><span>Total Omset</span><b>${rp(r.total)}</b></div><div class="wa-shot-stat"><span>Transaksi</span><b>${r.trx}</b></div><div class="wa-shot-stat"><span>Item Terjual</span><b>${r.qty}</b></div></div></div><div class="wa-shot-card"><h3>Total Penjualan per Tanggal</h3><table class="wa-omset-table">${html}</table><div class="wa-shot-foot">Dibuat otomatis dari aplikasi • ${new Date().toLocaleString('id-ID',{dateStyle:'full',timeStyle:'short'})}</div></div></div>`;
+  document.body.appendChild(wrap); return wrap;
+}
+async function blobGambarOmset(){
+  if(typeof html2canvas==='undefined'){toast('Library gambar belum termuat. Coba buka dengan internet.');return null}
+  const wrap=elemenGambarOmset(); if(!wrap){toast('Belum ada data bulan ini');return null}
+  try{const target=wrap.querySelector('#waShotOmset'); const canvas=await html2canvas(target,{backgroundColor:'#f8fafc',scale:2,useCORS:true,width:target.scrollWidth,height:target.scrollHeight,windowWidth:target.scrollWidth,windowHeight:target.scrollHeight}); return await new Promise(resolve=>canvas.toBlob(resolve,'image/png',0.96));}finally{wrap.remove()}
+}
+async function simpanGambarOmset(){const blob=await blobGambarOmset(); if(!blob)return; const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`omset-harian-${bulan.value||today().slice(0,7)}.png`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); toast('Gambar omset disimpan')}
+async function kirimWAGambarOmset(){const blob=await blobGambarOmset(); if(!blob)return; const file=new File([blob],`omset-harian-${bulan.value||today().slice(0,7)}.png`,{type:'image/png'}); if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:'Omset Harian',text:'Omset Harian '+formatBulanIndo(bulan.value)});toast('Pilih WhatsApp untuk mengirim gambar')}catch(e){toast('Share gambar dibatalkan')}}else{await simpanGambarOmset();window.open('https://wa.me/?text='+encodeURIComponent('Omset Harian '+formatBulanIndo(bulan.value)+'\nGambar sudah disimpan, silakan lampirkan di WhatsApp.'),'_blank');toast('Browser ini belum bisa share gambar langsung')}}
+
 function renderBulanan(){
   const data=filtered(), items=getItems(), order=[...(items.produk||[]),...(items.extra||[]),...(items.minuman||[])];
   const ym=bulan.value;
@@ -391,11 +453,45 @@ function renderBulanan(){
     <div class="row" style="margin-top:10px"><button class="red" onclick="confirmDeleteMonth()">Hapus Bulan Ini</button></div>
   </section>`;
 }
-function render(){if(MODE==='transaksi')renderTransaksi(); if(MODE==='harian')renderHarian(); if(MODE==='bulanan')renderBulanan()}
+function render(){if(MODE==='transaksi')renderTransaksi(); if(MODE==='harian')renderHarian(); if(MODE==='bulanan')renderBulanan(); if(MODE==='omset')renderOmsetHarian()}
 function findById(id){return ALL.find(x=>String(x.id)===String(id))}
-function openEdit(id){const d=clone(findById(id)); if(!d)return; const itemRows=['produk','extra','minuman'].map(k=>`<h4>${esc((d.labels&&d.labels[k])||k)}</h4><div class="edit-grid">${(d[k]||[]).map((it,i)=>`<div class="edit-item"><div><b>${esc(it.nama)}</b><div class="small">${rp(it.harga)}</div></div><input class="qty" type="number" min="0" inputmode="numeric" id="edit_${k}_${i}" value="${+it.jumlah||0}"></div>`).join('')}</div>`).join('');editContent.innerHTML=`<h3>Edit Transaksi</h3><p class="small">Ubah jumlah item, operator, tanggal, atau catatan. Setelah disimpan laporan otomatis dihitung ulang.</p><label>Tanggal<input type="date" id="editTanggal" value="${esc(d.tanggal)}"></label><label>Operator<input id="editOperator" value="${esc(d.operator||'')}"></label><label>Catatan<textarea id="editCatatan">${esc(d.catatan||'')}</textarea></label>${itemRows}<div class="row" style="margin-top:12px"><button class="ghost" onclick="editModal.classList.remove('show')">Batal</button><button class="green" onclick="saveEdit(${d.id})">Simpan Edit</button></div>`;editModal.dataset.id=id;editModal.classList.add('show')}
+function listEditItems(d,k){
+  const cfg=getItems();
+  const base=(cfg[k]||[]).map(x=>({nama:x.nama,harga:+x.harga||0,jumlah:0,total:0}));
+  const old=(d[k]||[]);
+  old.forEach(x=>{let f=base.find(b=>b.nama===x.nama); if(f){f.harga=+x.harga||f.harga;f.jumlah=+x.jumlah||0;f.total=f.jumlah*f.harga}else base.push({nama:x.nama,harga:+x.harga||0,jumlah:+x.jumlah||0,total:(+x.jumlah||0)*(+x.harga||0)})});
+  return base;
+}
+function openEdit(id){
+  const d=clone(findById(id)); if(!d)return;
+  const labels=Object.assign({},getItems().labels||{},d.labels||{});
+  const itemRows=['produk','extra','minuman'].map(k=>{
+    const list=listEditItems(d,k);
+    return `<div class="section-title" style="margin-top:14px"><b>${esc(labels[k]||k)}</b><span class="pill">Isi item yang berubah</span></div><div class="edit-grid">${list.map((it,i)=>`<div class="edit-item"><div><b>${esc(it.nama)}</b><div class="small">${rp(it.harga)}</div></div><input class="qty" type="number" min="0" inputmode="numeric" data-k="${k}" data-i="${i}" data-nama="${esc(it.nama)}" data-harga="${+it.harga||0}" value="${+it.jumlah||0}" onfocus="if(this.value==='0')this.value=''" oninput="previewEditTotal()"></div>`).join('')}</div>`;
+  }).join('');
+  editContent.innerHTML=`<h3>Edit Transaksi</h3><p class="small">Tampilannya dibuat seperti input: semua item muncul, jadi bisa menambah angka di item lain tanpa membuat transaksi baru.</p><div class="month-hero" style="padding:13px;margin-bottom:12px"><div class="label">TOTAL EDIT</div><div class="big" id="editTotalPreview">${rp(d.total)}</div></div><label>Tanggal<input type="date" id="editTanggal" value="${esc(d.tanggal)}"></label><label>Operator<input id="editOperator" value="${esc(d.operator||'')}"></label><label>Catatan<textarea id="editCatatan">${esc(d.catatan||'')}</textarea></label>${itemRows}<div class="row" style="margin-top:12px"><button class="ghost" onclick="editModal.classList.remove('show')">Batal</button><button class="green" onclick="saveEdit(${d.id})">Simpan Edit</button></div>`;
+  editModal.dataset.id=id;editModal.classList.add('show');previewEditTotal();
+}
+function previewEditTotal(){
+  const inputs=[...editContent.querySelectorAll('input[data-k]')];
+  const total=inputs.reduce((a,el)=>a+((+el.value||0)*(+el.dataset.harga||0)),0);
+  const box=document.getElementById('editTotalPreview'); if(box)box.textContent=rp(total);
+}
 function closeEdit(e){if(e.target===editModal)editModal.classList.remove('show')}
-async function saveEdit(id){let d=findById(id);if(!d)return;const oldDate=d.tanggal;d.tanggal=editTanggal.value;d.operator=editOperator.value;d.catatan=editCatatan.value;['produk','extra','minuman'].forEach(k=>(d[k]||[]).forEach((it,i)=>{it.jumlah=+document.getElementById(`edit_${k}_${i}`).value||0;it.total=it.jumlah*(+it.harga||0)}));d.editedAt=new Date().toISOString();d.synced=false;calcTotal(d);await idbPut(d);if(oldDate!==d.tanggal)await firebaseDelete(oldDate,d.id);try{await firebasePut(d);toast('Edit tersimpan dan dicadangkan')}catch(e){toast('Edit tersimpan di perangkat')}editModal.classList.remove('show');await loadLocal();render()}
+async function saveEdit(id){
+  let d=findById(id);if(!d)return;
+  const oldDate=d.tanggal;
+  d.tanggal=editTanggal.value;d.operator=editOperator.value;d.catatan=editCatatan.value;
+  ['produk','extra','minuman'].forEach(k=>{
+    const inputs=[...editContent.querySelectorAll(`input[data-k="${k}"]`)];
+    d[k]=inputs.map(el=>{const jumlah=+el.value||0,harga=+el.dataset.harga||0;return {nama:el.dataset.nama,harga,jumlah,total:jumlah*harga}});
+  });
+  d.labels=Object.assign({},getItems().labels||{},d.labels||{});
+  d.editedAt=new Date().toISOString();d.synced=false;calcTotal(d);
+  await idbPut(d);if(oldDate!==d.tanggal)await firebaseDelete(oldDate,d.id);
+  try{await firebasePut(d);toast('Edit tersimpan dan dicadangkan')}catch(e){toast('Edit tersimpan di perangkat')}
+  editModal.classList.remove('show');await loadLocal();render()
+}
 async function deleteTransaction(d){await idbDel(d.id);await firebaseDelete(d.tanggal,d.id);await loadLocal();render();toast('Transaksi dihapus')}
 function confirmDeleteTrx(id){const d=findById(id);if(!d)return;if(confirm('Hapus transaksi ini? Data akan dihapus dari perangkat dan cadangan online.'))deleteTransaction(d)}
 async function deleteDay(date){if(!confirm('Hapus semua transaksi tanggal '+date+'?'))return;const arr=ALL.filter(x=>x.tanggal===date);for(const d of arr){await idbDel(d.id);await firebaseDelete(d.tanggal,d.id)}await loadLocal();render();toast('Data harian dihapus')}
