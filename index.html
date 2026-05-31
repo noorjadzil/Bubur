@@ -166,11 +166,11 @@ button{
   <section class="card">
     <div class="grid">
       <label>Tanggal
-        <input type="date" id="tanggal" onchange="updateHari()">
+        <input type="date" id="tanggal" onchange="updateHari();saveDraft()">
         <div class="pill" id="hariBox" style="margin-top:8px;text-align:center">-</div>
       </label>
       <label>Operator
-        <select id="operator" onchange="setOperatorBadge()"></select>
+        <select id="operator" onchange="setOperatorBadge();saveDraft()"></select>
       </label>
     </div>
   </section>
@@ -180,7 +180,7 @@ button{
       <b>Catatan</b>
       <span class="pill">Opsional</span>
     </div>
-    <textarea id="catatan" placeholder="Catatan transaksi, stok, kekurangan barang, atau evaluasi harian..."
+    <textarea id="catatan" oninput="saveDraft()" placeholder="Catatan transaksi, stok, kekurangan barang, atau evaluasi harian..."
 style="min-height:160px;resize:vertical;line-height:1.6"></textarea>
   </section>
 
@@ -232,6 +232,7 @@ const DEFAULT_OPERATORS=['Akang Hamzah','Operator 1','Operator 2'];
 const FIREBASE_URL='https://bubur-60a27-default-rtdb.asia-southeast1.firebasedatabase.app';
 const DB_NAME='bubur_akang_hamzah_db';
 const DB_VERSION=1;
+const DRAFT_KEY='bubur_input_draft_v1';
 let dbPromise=null;
 
 
@@ -377,11 +378,51 @@ function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 
 function qtyInput(id){
   return `<input class="qty is-zero" type="number" inputmode="numeric" min="0" value="0" id="${id}"
-    onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="markZero(this);hitung()">`;
+    onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="markZero(this);hitung();saveDraft()">`;
 }
 function clearZero(el){if(el.value==='0')el.value='';markZero(el)}
 function restoreZero(el){if(el.value===''||Number(el.value)<0)el.value='0';markZero(el);hitung()}
 function markZero(el){el.classList.toggle('is-zero',Number(el.value||0)===0)}
+
+function saveDraft(){
+  try{
+    const draft={
+      tanggal:tanggal?.value||'',
+      operator:operator?.value||'',
+      catatan:catatan?.value||'',
+      numbers:{},
+      radios:{}
+    };
+    document.querySelectorAll('input[type=number]:not([readonly])').forEach(el=>{
+      if(el.id)draft.numbers[el.id]=el.value;
+    });
+    document.querySelectorAll('.seg input[type=radio]:checked').forEach(el=>{
+      if(el.name)draft.radios[el.name]=el.value;
+    });
+    localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));
+  }catch(e){}
+}
+function restoreDraft(){
+  let draft=null;
+  try{draft=JSON.parse(localStorage.getItem(DRAFT_KEY)||'null')}catch(e){}
+  if(!draft)return;
+  if(draft.tanggal){tanggal.value=draft.tanggal;updateHari()}
+  if(draft.operator){operator.value=draft.operator;setOperatorBadge()}
+  if(typeof draft.catatan==='string')catatan.value=draft.catatan;
+  Object.entries(draft.numbers||{}).forEach(([id,val])=>{
+    const el=document.getElementById(id);
+    if(el){el.value=val;markZero(el)}
+  });
+  Object.entries(draft.radios||{}).forEach(([name,val])=>{
+    const el=document.querySelector(`input[name="${CSS.escape(name)}"][value="${CSS.escape(val)}"]`);
+    if(el)el.checked=true;
+  });
+  items.stok.forEach((_,i)=>hitungStok(i));
+  hitung();
+}
+function clearDraft(){
+  localStorage.removeItem(DRAFT_KEY);
+}
 
 function render(){
   let html='';
@@ -405,8 +446,8 @@ function render(){
     ${items.stok.map((n,i)=>`<div class="stok-card">
       <div class="stok-name">${esc(n)}</div>
       <div class="stok-grid">
-        <label>Stok awal<input type="number" inputmode="numeric" min="0" value="0" id="stok_awal_${i}" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="markZero(this);hitungStok(${i})" class="is-zero"></label>
-        <label>Stok laku<input type="number" inputmode="numeric" min="0" value="0" id="stok_laku_${i}" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="markZero(this);hitungStok(${i})" class="is-zero"></label>
+        <label>Stok awal<input type="number" inputmode="numeric" min="0" value="0" id="stok_awal_${i}" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="markZero(this);hitungStok(${i});saveDraft()" class="is-zero"></label>
+        <label>Stok laku<input type="number" inputmode="numeric" min="0" value="0" id="stok_laku_${i}" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="markZero(this);hitungStok(${i});saveDraft()" class="is-zero"></label>
         <label>Sisa<input class="stok-sisa" type="number" id="stok_sisa_${i}" value="0" readonly></label>
       </div>
     </div>`).join('')}
@@ -418,8 +459,8 @@ function render(){
     ${items.kurang.map((n,i)=>`<div class="check-card">
       <div class="check-name">${esc(n)}</div>
       <div class="seg">
-        <label><input type="radio" name="cek_${i}" value="cukup" checked><span class="cukup">Cukup</span></label>
-        <label><input type="radio" name="cek_${i}" value="kurang"><span class="kurang">Kurang</span></label>
+        <label><input type="radio" name="cek_${i}" value="cukup" checked onchange="saveDraft()"><span class="cukup">Cukup</span></label>
+        <label><input type="radio" name="cek_${i}" value="kurang" onchange="saveDraft()"><span class="kurang">Kurang</span></label>
       </div>
     </div>`).join('')}
     </div>
@@ -567,6 +608,7 @@ function resetForm(){
   document.querySelectorAll('[id^="stok_sisa_"]').forEach(x=>x.value='0');
   document.querySelectorAll('.seg input[value="cukup"]').forEach(x=>x.checked=true);
   catatan.value='';
+  clearDraft();
   hitung();
 }
 async function kirimWA(){
@@ -595,8 +637,10 @@ ${d.catatan}
   tampilToast('Transaksi tersimpan, WhatsApp dibuka');
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
 }
+window.addEventListener('beforeunload',saveDraft);
 openDB().then(()=>syncPending()).catch(()=>setSyncStatus('IndexedDB tidak tersedia'));
 render();
+restoreDraft();
 </script>
 </body>
 </html>
